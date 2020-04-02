@@ -7,15 +7,26 @@ sns.set(context="notebook", style="whitegrid", palette="dark")
 
 
 class Skylark_LinearRegression():
-    def __init__(self, X):
-        self.init_theta = np.zeros(X.shape[1])  # X.shape[1]=2,代表特征数n
-        self.final_theta = np.zeros(X.shape[1])
+    def __init__(self):
+        self.init_theta = None
+        self.final_theta = None
         self.epoch = 500
         self.b = 0  # 截距
         self.k = 0  # 斜率
         self.cost = []  # 代价数据
 
+    def initialize_weights(self, n_features):
+        # 随机初始化参数
+        limit = np.sqrt(1 / n_features)
+        w = np.random.uniform(-limit, limit, (n_features, 1))
+        b = 0
+        self.init_theta = np.insert(w, 0, b, axis=0)
+
     def fit(self, X, y):
+        m_samples, n_features = X.shape
+        self.initialize_weights(n_features)
+        X = np.insert(X, 0, 1, axis=1)
+        y = np.reshape(y, (m_samples, 1))
         final_theta, cost_data = self.batch_gradient_decent(
             self.init_theta, X, y, self.epoch)
         self.final_theta = final_theta
@@ -68,27 +79,20 @@ class Skylark_LinearRegression():
         return cost
 
     def visual_cost(self):
-        ax = plt.plot()
-        self.tsplot(ax, self.cost)
+        print(self.cost)
+        figure, ax = plt.subplots()
+        nums = np.arange(len(self.cost))
+        ax.plot(nums, np.array(self.cost).reshape((len(self.cost,))))
         ax.set_xlabel('epoch')
         ax.set_ylabel('cost')
         plt.show()
 
-    def tsplot(self, ax, data, **kw):
-        x = np.arange(data.shape[1])
-        est = np.mean(data, axis=0)
-        sd = np.std(data, axis=0)
-        cis = (est - sd, est + sd)
-        ax.fill_between(x, cis[0], cis[1], alpha=0.2, **kw)
-        ax.plot(x, est, **kw)
-        ax.margins(x=0)
-
 
 if __name__ == '__main__':
-    use_sklearn = True
+    use_sklearn = False
 
     # Data Preprocessing
-    dataset = pd.read_csv('studentscores.csv')
+    dataset = pd.read_csv('./dataset/studentscores.csv')
     X = dataset.iloc[:, : 1].values
     Y = dataset.iloc[:, 1].values
 
@@ -104,8 +108,9 @@ if __name__ == '__main__':
         regressor = regressor.fit(X_train, Y_train)
 
     else:
-        regressor = Skylark_LinearRegression(X_train)
+        regressor = Skylark_LinearRegression()
         regressor.fit(X_train, Y_train)
+        # regressor.visual_cost()
 
     # Predecting the Result
     Y_pred = regressor.predict(X_test)
@@ -117,3 +122,4 @@ if __name__ == '__main__':
     # Testing Results
     plt.scatter(X_test, Y_test, color='red')
     plt.plot(X_test, Y_pred, color='blue')
+    plt.show()
