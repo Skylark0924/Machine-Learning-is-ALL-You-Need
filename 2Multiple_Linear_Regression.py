@@ -1,9 +1,9 @@
-from sklearn.model_selection import train_test_split
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
-import seaborn as sns
-sns.set(context="notebook", style="whitegrid", palette="dark")
+
+from sklearn.model_selection import train_test_split
+from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
 
 class Skylark_LinearRegression():
@@ -15,24 +15,11 @@ class Skylark_LinearRegression():
         self.k = 0  # 斜率
         self.cost = []  # 代价数据
 
-    def fit(self, X, y):
-        final_theta, cost_data = self.batch_gradient_decent(
-            self.init_theta, X, y, self.epoch)
-        self.final_theta = final_theta
-        self.b = self.final_theta[0]
-        self.k = self.final_theta[1]
-        self.cost = cost_data
-
-    def predict(self, X):
-        Y = X*self.k+self.b
-        return Y
-
     def batch_gradient_decent(self, theta, X, y, epoch, alpha=0.01):
         '''
         批量梯度下降, 拟合线性回归, 返回参数和代价
         epoch: 批处理的轮数
         theta: 网络参数
-        alpha: 学习率
         '''
         cost_data = [self.lr_cost(theta, X, y)]
         _theta = theta.copy()  # 拷贝一份，不和原来的theta混淆
@@ -67,6 +54,18 @@ class Skylark_LinearRegression():
 
         return cost
 
+    def fit(self, X, y):
+        final_theta, cost_data = self.batch_gradient_decent(
+            self.init_theta, X, y, self.epoch)
+        self.final_theta = final_theta
+        self.b = self.final_theta[0]
+        self.k = self.final_theta[1]
+        self.cost = cost_data
+
+    def predict(self, X):
+        Y = X*self.k+self.b
+        return Y
+
     def visual_cost(self):
         ax = plt.plot()
         self.tsplot(ax, self.cost)
@@ -88,20 +87,29 @@ if __name__ == '__main__':
     use_sklearn = True
 
     # Data Preprocessing
-    dataset = pd.read_csv('studentscores.csv')
-    X = dataset.iloc[:, : 1].values
-    Y = dataset.iloc[:, 1].values
+    dataset = pd.read_csv('50_Startups.csv')
+    X = dataset.iloc[:, :-1].values
+    Y = dataset.iloc[:,  4].values
+
+    # Encoding Categorical data
+    labelencoder = LabelEncoder()
+    X[:, 3] = labelencoder.fit_transform(X[:, 3])
+    onehotencoder = OneHotEncoder(categorical_features=[3])
+    X = onehotencoder.fit_transform(X).toarray()
+
+    # Avoiding Dummy Variable Trap
+    X = X[:, 1:]
 
     # Making Dataset
     X_train, X_test, Y_train, Y_test = train_test_split(
-        X, Y, test_size=1/4, random_state=0)
+        X, Y, test_size=0.2, random_state=0)
 
     if use_sklearn:
         from sklearn.linear_model import LinearRegression
 
         # Fitting Simple Linear Regression Model to the training set
         regressor = LinearRegression()
-        regressor = regressor.fit(X_train, Y_train)
+        regressor.fit(X_train, Y_train)
 
     else:
         regressor = Skylark_LinearRegression(X_train)
