@@ -9,28 +9,34 @@
 本代码库通过 sklearn 标准机器学习库以及自己编写的类两种方式，实现了基本的机器学习算法。通过更改主函数中的 use_sklearn flag 即可切换。
 
 ### Linear Regression
+[SLR Code](./1Single_Linear_Regression/1Single_Linear_Regression.py)
 
-
+[MLR Code](./2Multiple_Linear_Regression/2Multiple_Linear_Regression.py)
 
 ### Logistic Regression
-
+[Code](./3Logistic_Regression/3Logistic_Regression.py)
 
 
 ### K Nearest Neighbours (KNN)
-
+[Code](./4K_Nearest_Neighbours/4K_Nearest_Neighbours.py)
 
 
 ### Support Vector Machine (SVM)
+[Code](./5Support_Vector_Machine/5Support_Vector_Machine.py)
 
 
+### Naive_Bayes
+[Code](./6Naive_Bayes/6Naive_Bayes.py)
 
-### Random Forest 
 
 
 
 ### Decision Tree
+[Code](./7Decision_Trees/7Decision_Trees.py)
 
 
+### Random Forest 
+[Code](./8Random_Forest/8Random_Forest.py)
 
 ### Neural Network
 
