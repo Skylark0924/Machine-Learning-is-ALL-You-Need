@@ -7,20 +7,42 @@ from sklearn.preprocessing import StandardScaler
 
 
 class Skylark_LogisticRegression():
-    def __init__(self):
+    def __init__(self, learning_rate=0.1, epoch=500):
         super().__init__()
-        self.init_theta = np.zeros(3)  # X(m*n) so theta is n*1
-        self.final_theta = np.zeros(3)
+        self.learning_rate = learning_rate
+        self.epoch = epoch
 
-    def fit(self, X, Y):
-        import scipy.optimize as opt
-        res = opt.minimize(fun=self.cost, x0=self.init_theta, args=(
-            X, Y), method='Newton-CG', jac=self.gradient)
-        self.final_theta = res.x
+        self.init_theta = None  
+        self.final_theta = None
+
+    def initialize_weights(self, n_features):
+        # 初始化参数
+        # 参数范围[-1/sqrt(N), 1/sqrt(N)]
+        limit = np.sqrt(1 / n_features)
+        w = np.random.uniform(-limit, limit, (n_features, 1))
+        b = 0
+        self.init_theta = np.insert(w, 0, b, axis=0)
+
+    def fit(self, X, y):
+        m_samples, n_features = X.shape
+        self.initialize_weights(n_features)
+        # 为X增加一列特征x1，x1 = 0
+        X = np.insert(X, 0, 1, axis=1)
+        y = np.reshape(y, (m_samples, 1))
+
+        # 梯度训练n_iterations轮
+        for i in range(self.epoch):
+            h_x = X.dot(self.init_theta)
+            y_pred = self.sigmoid(h_x)
+            theta_grad = X.T.dot(y_pred - y)
+            self.init_theta = self.init_theta - self.learning_rate * theta_grad
+        self.final_theta = self.init_theta
 
     def predict(self, X):
-        prob = self.sigmoid(X @ self.final_theta)
-        return (prob >= 0.5).astype(int)
+        X = np.insert(X, 0, 1, axis=1)
+        h_x = X.dot(self.final_theta)
+        y_pred = np.round(self.sigmoid(h_x))
+        return y_pred.astype(int)
 
     def cost(self, theta, X, y):
         ''' cost fn is -l(theta) for you to minimize'''
@@ -35,9 +57,9 @@ class Skylark_LogisticRegression():
 
 
 if __name__ == '__main__':
-    use_sklearn = True
+    use_sklearn = False
 
-    dataset = pd.read_csv('Social_Network_Ads.csv')
+    dataset = pd.read_csv('./dataset/Social_Network_Ads.csv')
     X = dataset.iloc[:, [2, 3]].values
     Y = dataset.iloc[:, 4].values
 
@@ -47,12 +69,12 @@ if __name__ == '__main__':
 
     # Feature Scaling
     sc = StandardScaler()
-    X_train = sc.fit_transform(X_train)
-    X_test = sc.transform(X_test)
+    X_train = sc.fit_transform(X_train.astype(np.float64))
+    X_test = sc.transform(X_test.astype(np.float64))
 
     if use_sklearn:
         from sklearn.linear_model import LogisticRegression
-        classifier = LogisticRegression()
+        classifier = LogisticRegression(solver='lbfgs')
         classifier.fit(X_train, Y_train)
     else:
         classifier = Skylark_LogisticRegression()
@@ -63,3 +85,4 @@ if __name__ == '__main__':
     # Making the Confusion Matrix
     from sklearn.metrics import confusion_matrix
     cm = confusion_matrix(Y_test, Y_pred)
+    print(cm)
