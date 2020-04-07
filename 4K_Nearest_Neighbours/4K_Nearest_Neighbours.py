@@ -2,10 +2,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import math
+import sys 
+sys.path.append("D:\Github\Machine-Learning-Basic-Codes") 
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
 
+from utils.visualize import *
 
 class Skylark_KNeighborsClassifier():
     def __init__(self, k_neighbors):
@@ -75,6 +78,4 @@ if __name__ == '__main__':
     # Y_pred = classifier.predict(X_test)
 
     # Making the Confusion Matrix
-    from sklearn.metrics import confusion_matrix
-    cm = confusion_matrix(Y_test, Y_pred)
-    print(cm)
+    print_confusion_matrix(Y_test, Y_test, clf_name='KNN')
