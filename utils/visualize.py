@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
 
-def visual_train(X_train, Y_train, classifier, clf_name):
+def visualization(X_train, Y_train, classifier, clf_name, set_name):
     X_set, y_set = X_train, Y_train
     X1, X2 = np.meshgrid(np.arange(start=X_set[:, 0].min() - 1, stop=X_set[:, 0].max() + 1, step=0.01),
                             np.arange(start=X_set[:, 1].min() - 1, stop=X_set[:, 1].max() + 1, step=0.01))
@@ -14,7 +14,7 @@ def visual_train(X_train, Y_train, classifier, clf_name):
     for i, j in enumerate(np.unique(y_set)):
         plt.scatter(X_set[y_set == j, 0], X_set[y_set == j, 1],
                     c=ListedColormap(('red', 'green'))(i), label=j)
-    plt.title('{} (Training set)'.format(clf_name))
+    plt.title('{} ({} set)'.format(clf_name, set_name))
     plt.xlabel('Age')
     plt.ylabel('Estimated Salary')
     plt.legend()
