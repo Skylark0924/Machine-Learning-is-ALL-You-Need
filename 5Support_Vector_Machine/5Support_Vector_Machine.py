@@ -140,12 +140,12 @@ if __name__ == '__main__':
 
     # Data Preprocessing
     dataset = pd.read_csv('./dataset/Social_Network_Ads.csv')
-    X = dataset.iloc[:, [2, 3]].values
-    Y = dataset.iloc[:, 4].values
+    X_data = dataset.iloc[:, [2, 3]].values
+    Y_data = dataset.iloc[:, 4].values
 
     # Making Dataset
     X_train, X_test, Y_train, Y_test = train_test_split(
-        X, Y, test_size=0.25, random_state=0)
+        X_data, Y_data, test_size=0.25, random_state=0)
 
     sc = StandardScaler()
     X_train = sc.fit_transform(X_train.astype(np.float64))
@@ -166,3 +166,6 @@ if __name__ == '__main__':
 
     # Visualization
     visualization(X_train, Y_train, classifier, clf_name='SVM', set_name='Training')
+
+    visualization(X_test, Y_pred, classifier, clf_name='SVM', set_name='Test')
+
