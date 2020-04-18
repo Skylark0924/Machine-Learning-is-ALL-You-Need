@@ -63,10 +63,8 @@ class Skylark_RandomForestClassifier():
         return np.array(y_pred)
 
     def get_bootstrap_data(self, X, Y):
-
-        # 通过bootstrap的方式获得n_estimators组数据
+        # 通过bootstrap的方式获得n_estimators组有放回的采样数据
         # get int(n_estimators) datas by bootstrap
-
         m = X.shape[0]
         Y = Y.reshape(m, 1)
 
@@ -119,7 +117,6 @@ if __name__ == '__main__':
     # Visualising the Training set results
     visualization_clf(X_train, Y_train, classifier,
                       clf_name='Random Forest Classification', set_name='Training')
-
     # Visualising the Test set results
     visualization_clf(X_test, Y_test, classifier,
                       clf_name='Random Forest Classification', set_name='Test')
