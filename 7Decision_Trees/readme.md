@@ -33,6 +33,8 @@
 2. C4.5: ID3改进版，**离散+连续**。引入“信息增益率”指标作为特征的选择依据；
 3. CART: **即可分类又可回归**。使用了基尼系数取代了信息熵模型。
 
+![](https://user-gold-cdn.xitu.io/2018/3/11/162149725abc5fcb?imageView2/0/w/1280/h/960/format/webp/ignore-error/1)
+
 ### ID3信息增益
 设D为用类别对训练元组进行的划分，则D的熵（entropy）表示为：
 $$i n f o(D)=-\sum_{i=1}^{m} p_{i} \log _{2}\left(p_{i}\right)$$
@@ -107,4 +109,5 @@ CART又被称作分类回归树
 5. [决策树Decision Tree：熵和信息增益- 简书](https://www.jianshu.com/p/293fc62b84de)
 6. [机器学习算法实践-决策树(Decision Tree)](https://zhuanlan.zhihu.com/p/27905967)
 7. [决策树算法原理(下)](https://www.cnblogs.com/pinard/p/6053344.html)
+8. [三种决策树算法（ID3, CART, C4.5）及Python实现](https://juejin.im/post/5aa503b4518825555d46e1d8)
 

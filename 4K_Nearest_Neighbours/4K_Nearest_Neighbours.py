@@ -35,7 +35,7 @@ class Skylark_KNeighborsClassifier():
                 testLabel = counts.argmax()
                 y_predict[i] = testLabel
 
-        return y_predict
+        return np.array(y_predict)
 
     def euclidean_distance(self, x1, x2):
         """ Calculates the l2 distance between two vectors """
@@ -79,3 +79,10 @@ if __name__ == '__main__':
 
     # Making the Confusion Matrix
     print_confusion_matrix(Y_test, Y_test, clf_name='KNN')
+
+    # Visualization TODO
+    # visualization_clf(X_train, Y_train, classifier, clf_name='KNN', set_name='Training')
+    # visualization_clf(X_test, Y_test, classifier, clf_name='KNN', set_name='Test')
+
+
+

@@ -1,23 +1,16 @@
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
+import sys
+sys.path.append("D:\Github\Machine-Learning-Basic-Codes")
+import warnings
+warnings.filterwarnings('ignore')
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, OneHotEncoder
 
-
-class l1_regularization():
-    def __init__(self, alpha):
-        self.alpha = alpha
-
-    # L1正则化的方差
-    def __call__(self, w):
-        loss = np.sum(np.fabs(w))
-        return self.alpha * loss
-
-    # L1正则化的梯度
-    def grad(self, w):
-        return self.alpha * np.sign(w)
+from utils.visualize import *
+from utils.tool_func import *
 
 
 class l2_regularization():
@@ -167,11 +160,11 @@ if __name__ == '__main__':
     # Predecting the Result
     Y_pred = regressor.predict(X_test)
 
-    # # Visualization
-    # # Training Results
-    # plt.scatter(X_train, Y_train, color='red')
-    # plt.plot(X_train, regressor.predict(X_train), color='blue')
-    # # Testing Results
-    # plt.scatter(X_test, Y_test, color='red')
-    # plt.plot(X_test, Y_pred, color='blue')
-    # plt.show()
+    # MSE
+    print_mse(Y_test, Y_pred, reg_name='MLR')
+
+    # Visualization
+    visualization_reg(X_train, Y_train, regressor,
+                  reg_name='Multiple Linear Regression', set_name='Training')
+    visualization_reg(X_test, Y_test, regressor,
+                  reg_name='Multiple Linear Regression', set_name='Test')

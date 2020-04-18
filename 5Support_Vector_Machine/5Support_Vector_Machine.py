@@ -165,7 +165,7 @@ if __name__ == '__main__':
     print_confusion_matrix(Y_test, Y_pred, clf_name='SVM')
 
     # Visualization
-    visualization(X_train, Y_train, classifier, clf_name='SVM', set_name='Training')
+    visualization_clf(X_train, Y_train, classifier, clf_name='SVM', set_name='Training')
 
-    visualization(X_test, Y_pred, classifier, clf_name='SVM', set_name='Test')
+    visualization_clf(X_test, Y_test, classifier, clf_name='SVM', set_name='Test')
 

@@ -4,32 +4,13 @@ import numpy as np
 import matplotlib.pyplot as plt
 import seaborn as sns
 sns.set(context="notebook", style="whitegrid", palette="dark")
+import sys
+sys.path.append("D:\Github\Machine-Learning-Basic-Codes")
+import warnings
+warnings.filterwarnings('ignore')
 
-class l1_regularization():
-    def __init__(self, alpha):
-        self.alpha = alpha
- 
-    # L1正则化的方差
-    def __call__(self, w):
-        loss = np.sum(np.fabs(w))
-        return self.alpha * loss
- 
-    # L1正则化的梯度
-    def grad(self, w):
-        return self.alpha * np.sign(w)
-
-class l2_regularization():
-    def __init__(self, alpha):
-        self.alpha = alpha
- 
-    # L2正则化的方差
-    def __call__(self, w):
-        loss = w.T.dot(w)
-        return self.alpha * 0.5 * float(loss)
- 
-    # L2正则化的梯度
-    def grad(self, w):
-        return self.alpha * w
+from utils.tool_func import *
+from utils.visualize import *
 
 class Skylark_LinearRegression():
     def __init__(self, n_epoch=500, learning_rate=0.01, regularization=None, use_gradient=True):
@@ -115,7 +96,7 @@ class Skylark_LinearRegression():
         # but you know numpy didn't do transpose in 1d array, so here is just a
         # vector inner product to itselves
         square_sum = inner.T @ inner
-        cost = square_sum / (2 * m) + self.regularization(theta) 
+        cost = square_sum / (2 * m) + self.regularization(theta)
 
         return cost
 
@@ -154,11 +135,11 @@ if __name__ == '__main__':
     # Predecting the Result
     Y_pred = regressor.predict(X_test)
 
+    # MSE
+    print_mse(Y_test, Y_pred, reg_name='SLR')
+
     # Visualization
-    # Training Results
-    plt.scatter(X_train, Y_train, color='red')
-    plt.plot(X_train, regressor.predict(X_train), color='blue')
-    # Testing Results
-    plt.scatter(X_test, Y_test, color='red')
-    plt.plot(X_test, Y_pred, color='blue')
-    plt.show()
+    visualization_reg(X_train, Y_train, regressor,
+                  reg_name='Single Linear Regression', set_name='Training')
+    visualization_reg(X_test, Y_test, regressor,
+                  reg_name='Single Linear Regression', set_name='Test')
