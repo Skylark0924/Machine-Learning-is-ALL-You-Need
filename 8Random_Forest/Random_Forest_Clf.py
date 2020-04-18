@@ -2,14 +2,15 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 import math
-import sys 
-sys.path.append("D:\Github\Machine-Learning-Basic-Codes") 
+import sys
+sys.path.append("D:\Github\Machine-Learning-Basic-Codes")
+sys.path.append("D:/Github/Machine-Learning-Basic-Codes/7Decision_Trees")
 
-from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+from sklearn.model_selection import train_test_split
 
+from Decision_Trees_Clf import Skylark_DecisionTreeClassifier
 from utils.visualize import *
-from 7Decision_Trees.7Decision_Trees  import ClassificationTree
 
 class Skylark_RandomForestClassifier():
     def __init__(self, n_estimators=100, min_samples_split=2, min_gain=0,
@@ -24,8 +25,8 @@ class Skylark_RandomForestClassifier():
         self.trees = []
         # 建立森林(bulid forest)
         for _ in range(self.n_estimators):
-            tree = ClassificationTree(min_samples_split=self.min_samples_split, min_impurity=self.min_gain,
-                                      max_depth=self.max_depth)
+            tree = Skylark_DecisionTreeClassifier(min_samples_split=self.min_samples_split, min_impurity=self.min_gain,
+                                                  max_depth=self.max_depth)
             self.trees.append(tree)
 
     def fit(self, X_train, Y_train):
@@ -44,7 +45,7 @@ class Skylark_RandomForestClassifier():
             self.trees[i].fit(sub_X, sub_Y)
             self.trees[i].feature_indices = idx
             print("tree", i, "fit complete")
-            
+
     def predict(self, X_test):
         y_preds = []
         for i in range(self.n_estimators):
@@ -59,8 +60,8 @@ class Skylark_RandomForestClassifier():
             # np.argmax()可以返回数组中最大值的索引
             # cheak np.bincount() and np.argmax() in numpy Docs
             y_pred.append(np.bincount(y_p.astype('int')).argmax())
-        return y_pred
-    
+        return np.array(y_pred)
+
     def get_bootstrap_data(self, X, Y):
 
         # 通过bootstrap的方式获得n_estimators组数据
@@ -82,8 +83,6 @@ class Skylark_RandomForestClassifier():
             data_sets.append([bootstrap_X, bootstrap_Y])
         return data_sets
 
-    
-
 
 if __name__ == '__main__':
     use_sklearn = False
@@ -104,10 +103,11 @@ if __name__ == '__main__':
 
     if use_sklearn:
         from sklearn.ensemble import RandomForestClassifier
-        classifier = RandomForestClassifier(n_estimators = 10, criterion = 'entropy', random_state = 0)
+        classifier = RandomForestClassifier(
+            n_estimators=10, criterion='entropy', random_state=0)
         classifier.fit(X_train, Y_train)
     else:
-        classifier = Skylark_RandomForestClassifier(n_estimators = 10)
+        classifier = Skylark_RandomForestClassifier(n_estimators=10)
         classifier.fit(X_train, Y_train)
 
     Y_pred = classifier.predict(X_test)
@@ -117,9 +117,9 @@ if __name__ == '__main__':
         Y_test, Y_pred, clf_name='Random Forest Classification')
 
     # Visualising the Training set results
-    visualization(X_train, Y_train, classifier,
-                  clf_name='Random Forest Classification', set_name='Training')
+    visualization_clf(X_train, Y_train, classifier,
+                      clf_name='Random Forest Classification', set_name='Training')
 
     # Visualising the Test set results
-    visualization(X_train, Y_train, classifier,
-                  clf_name='Random Forest Classification', set_name='Test')
+    visualization_clf(X_test, Y_test, classifier,
+                      clf_name='Random Forest Classification', set_name='Test')

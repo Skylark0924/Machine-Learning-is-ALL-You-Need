@@ -99,5 +99,5 @@ if __name__ == '__main__':
     visualization_clf(X_train, Y_train, classifier,
                   clf_name='Naive Bayes Classification', set_name='Training')
     # Visualising the Test set results
-    visualization_clf(X_test, Y_pred, classifier,
+    visualization_clf(X_test, Y_test, classifier,
                   clf_name='Naive Bayes Classification', set_name='Test')

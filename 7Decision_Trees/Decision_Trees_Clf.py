@@ -78,5 +78,5 @@ if __name__ == '__main__':
                   clf_name='Decision Tree Classification', set_name='Training')
 
     # Visualising the Test set results
-    visualization_clf(X_test, Y_pred, classifier,
+    visualization_clf(X_test, Y_test, classifier,
                   clf_name='Decision Tree Classification', set_name='Test')
