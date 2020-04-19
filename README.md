@@ -39,5 +39,21 @@
 
 13. K-Means
 
+### Reinforcement Learning
+14. Deep Q Network
 
+15. Policy Proximate Optimization
 
+16. Deep Deterministic Policy Gradient
+
+17. Actor Critic
+
+18. Soft Actor Critic
+
+### Computer Vision
+19. GAN 
+
+20. Resnet
+
+### Natural Language Processing
+21. BERT
