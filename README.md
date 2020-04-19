@@ -6,7 +6,13 @@
 
 📐📏
 
-本代码库通过 sklearn 标准机器学习库以及自己编写的类两种方式，实现了基本的机器学习算法。通过更改主函数中的 use_sklearn flag 即可切换。
+本代码库通过 sklearn 标准机器学习库以及自己编写的类两种方式，实现了基本的机器学习算法。
+
+- Common Machine Learning Part: 通过更改主函数中的 use_sklearn flag 即可切换；
+
+- Deep Learning Part: use_sklearn, use_keras, use_torch以及 Self-implement 四种实现方式；
+
+- Applications Part: RL + NLP + CV
 
 ### Regression
 1. [Single Linear Regression](./1Single_Linear_Regression/1Single_Linear_Regression.py)
