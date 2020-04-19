@@ -8,48 +8,36 @@
 
 本代码库通过 sklearn 标准机器学习库以及自己编写的类两种方式，实现了基本的机器学习算法。通过更改主函数中的 use_sklearn flag 即可切换。
 
-### Linear Regression
-[SLR Code](./1Single_Linear_Regression/1Single_Linear_Regression.py)
+### Regression
+1. [Single Linear Regression](./1Single_Linear_Regression/1Single_Linear_Regression.py)
 
-[MLR Code](./2Multiple_Linear_Regression/2Multiple_Linear_Regression.py)
+2. [Multiple Linear Regression](./2Multiple_Linear_Regression/2Multiple_Linear_Regression.py)
 
-### Logistic Regression
-[Code](./3Logistic_Regression/3Logistic_Regression.py)
+### Classification
+3. [Logistic Regression](./3Logistic_Regression/3Logistic_Regression.py)
 
+4. [KNN](./4K_Nearest_Neighbours/)
 
-### K Nearest Neighbours (KNN)
-[Code](./4K_Nearest_Neighbours/4K_Nearest_Neighbours.py)
+5. [Support Vector Machine](./5Support_Vector_Machine/)
 
+6. [Naive Bayes](./6Naive_Bayes/)
 
-### Support Vector Machine (SVM)
-[Code](./5Support_Vector_Machine/5Support_Vector_Machine.py)
+### Regression & Classification
+7. [Decision Tree](./7Decision_Trees/)
 
-
-### Naive_Bayes
-[Code](./6Naive_Bayes/6Naive_Bayes.py)
-
-
-
-
-### Decision Tree
-[Code](./7Decision_Trees/7Decision_Trees.py)
-
-
-### Random Forest 
-[Code](./8Random_Forest/8Random_Forest.py)
+8. [Random Forest](./8Random_Forest/)
 
 ### Neural Network
+9. Feedforward Neural Network
 
+10. Convolutional Neural Network
 
-### Convolutional Neural Network
+11. LSTM
 
+### Unsupervised Learning
+12. PCA
 
-
-### Principal components analysis (PCA)
-
-
-
-### K-Means
+13. K-Means
 
 
 
