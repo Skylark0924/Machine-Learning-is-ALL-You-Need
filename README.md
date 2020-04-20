@@ -6,50 +6,60 @@
 
 📐📏
 
-本代码库通过 sklearn 标准机器学习库以及自己编写的类两种方式，实现了基本的机器学习算法。通过更改主函数中的 use_sklearn flag 即可切换。
+本代码库通过 sklearn 标准机器学习库以及自己编写的类两种方式，实现了基本的机器学习算法。
 
-### Linear Regression
-[SLR Code](./1Single_Linear_Regression/1Single_Linear_Regression.py)
+- Common Machine Learning Part: 通过更改主函数中的 use_sklearn flag 即可切换；
 
-[MLR Code](./2Multiple_Linear_Regression/2Multiple_Linear_Regression.py)
+- Deep Learning Part: use_sklearn, use_keras, use_torch以及 Self-implement 四种实现方式；
 
-### Logistic Regression
-[Code](./3Logistic_Regression/3Logistic_Regression.py)
+- Applications Part: RL + NLP + CV
 
+### Regression
+1. [Single Linear Regression](./1Single_Linear_Regression/1Single_Linear_Regression.py)
 
-### K Nearest Neighbours (KNN)
-[Code](./4K_Nearest_Neighbours/4K_Nearest_Neighbours.py)
+2. [Multiple Linear Regression](./2Multiple_Linear_Regression/2Multiple_Linear_Regression.py)
 
+### Classification
+3. [Logistic Regression](./3Logistic_Regression/3Logistic_Regression.py)
 
-### Support Vector Machine (SVM)
-[Code](./5Support_Vector_Machine/5Support_Vector_Machine.py)
+4. [KNN](./4K_Nearest_Neighbours/)
 
+5. [Support Vector Machine](./5Support_Vector_Machine/)
 
-### Naive_Bayes
-[Code](./6Naive_Bayes/6Naive_Bayes.py)
+6. [Naive Bayes](./6Naive_Bayes/)
 
+### Regression & Classification
+7. [Decision Tree](./7Decision_Trees/)
 
-
-
-### Decision Tree
-[Code](./7Decision_Trees/7Decision_Trees.py)
-
-
-### Random Forest 
-[Code](./8Random_Forest/8Random_Forest.py)
+8. [Random Forest](./8Random_Forest/)
 
 ### Neural Network
+9. Feedforward Neural Network
 
+10. Convolutional Neural Network
 
-### Convolutional Neural Network
+11. LSTM
 
+### Unsupervised Learning
+12. PCA
 
+13. K-Means
 
-### Principal components analysis (PCA)
+### Reinforcement Learning
+14. Deep Q Network
 
+15. Policy Proximate Optimization
 
+16. Deep Deterministic Policy Gradient
 
-### K-Means
+17. Actor Critic
 
+18. Soft Actor Critic
 
+### Computer Vision
+19. GAN 
 
+20. Resnet
+
+### Natural Language Processing
+21. BERT
