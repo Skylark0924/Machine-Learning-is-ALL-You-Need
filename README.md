@@ -34,7 +34,7 @@
 8. [Random Forest](./8Random_Forest/)
 
 ### Neural Network
-9. Feedforward Neural Network
+9. [Feedforward Neural Network](./9Neural_Network/)
 
 10. Convolutional Neural Network
 
@@ -62,4 +62,6 @@
 20. Resnet
 
 ### Natural Language Processing
-21. BERT
+21. Transformer
+
+22. BERT
