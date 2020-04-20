@@ -59,3 +59,15 @@ def divide_on_feature(X, feature_i, threshold):
     X_2 = np.array([sample for sample in X if not split_func(sample)])
 
     return np.array([X_1, X_2])
+
+def sigmoid(z):
+    return 1 / (1 + np.exp(-z))
+
+def sigmoid_derivative(z):
+    return z * (1 - z)
+
+def relu(z):
+    return np.maximum(z, 0)
+
+def relu_derivative(z):
+    return np.maximum(z, 0)

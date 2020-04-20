@@ -1,9 +1,15 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
+import sys
+sys.path.append("D:\Github\Machine-Learning-Basic-Codes")
+
 
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import StandardScaler
+
+from utils.tool_func import *
+from utils.visualize import *
 
 
 class Skylark_LogisticRegression():
@@ -33,7 +39,7 @@ class Skylark_LogisticRegression():
         # 梯度训练n_iterations轮
         for i in range(self.epoch):
             h_x = X.dot(self.init_theta)
-            y_pred = self.sigmoid(h_x)
+            y_pred = sigmoid(h_x)
             theta_grad = X.T.dot(y_pred - y)
             self.init_theta = self.init_theta - self.learning_rate * theta_grad
         self.final_theta = self.init_theta
@@ -41,19 +47,16 @@ class Skylark_LogisticRegression():
     def predict(self, X):
         X = np.insert(X, 0, 1, axis=1)
         h_x = X.dot(self.final_theta)
-        y_pred = np.round(self.sigmoid(h_x))
+        y_pred = np.round(sigmoid(h_x))
         return y_pred.astype(int)
 
     def cost(self, theta, X, y):
         ''' cost fn is -l(theta) for you to minimize'''
-        return np.mean(-y * np.log(self.sigmoid(X @ theta)) - (1 - y) * np.log(1 - self.sigmoid(X @ theta)))
+        return np.mean(-y * np.log(sigmoid(X @ theta)) - (1 - y) * np.log(1 - sigmoid(X @ theta)))
 
     def gradient(self, theta, X, y):
         '''just 1 batch gradient'''
-        return (1 / len(X)) * X.T @ (self.sigmoid(X @ theta) - y)
-
-    def sigmoid(self, z):
-        return 1 / (1 + np.exp(-z))
+        return (1 / len(X)) * X.T @ (sigmoid(X @ theta) - y)
 
 
 if __name__ == '__main__':
@@ -83,6 +86,12 @@ if __name__ == '__main__':
     Y_pred = classifier.predict(X_test)
 
     # Making the Confusion Matrix
-    from sklearn.metrics import confusion_matrix
-    cm = confusion_matrix(Y_test, Y_pred)
-    print(cm)
+    print_confusion_matrix(
+        Y_test, Y_pred, clf_name='Logistic Regression')
+
+    # Visualising the Training set results
+    visualization_clf(X_train, Y_train, classifier,
+                      clf_name='Logistic Regression', set_name='Training')
+    # Visualising the Test set results
+    visualization_clf(X_test, Y_test, classifier,
+                      clf_name='Logistic Regression', set_name='Test')
