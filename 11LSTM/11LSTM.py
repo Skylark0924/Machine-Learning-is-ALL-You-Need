@@ -1,17 +1,18 @@
 from LSTM_models import *
 
 if __name__ == '__main__':
-    mode = 'use_torch'  # ['use_tf', 'use_keras', 'use_torch', 'self_implement']
+    mode = 'use_keras'  # ['use_tf', 'use_keras', 'use_torch', 'self_implement']
     
-    hidden_sizes = [12, 8]
-    num_classes = 10
-    learning_rate = 0.0001
+    hidden_size = 500
+    num_epochs = 50
+    num_steps = 30
+    batch_size = 20
 
     if mode == 'use_keras':
-        X_train, Y_train, X_test, Y_test = keras_data()
-        classifier = Keras_LSTM(input_size, hidden_sizes, num_classes)
-        classifier.fit(X_train, Y_train, epochs=100, batch_size=32, learning_rate = learning_rate)
-        classifier.evaluate(X_test, Y_test)
+        train_data, valid_data, test_data, vocabulary, reversed_dictionary = keras_data()
+        classifier = Keras_LSTM(vocabulary, hidden_size, num_steps)
+        classifier.fit(train_data, valid_data, batch_size, num_epochs)
+        classifier.evaluate(test_data, reversed_dictionary)
     elif mode == 'use_torch':
         trainloader, testloader = Torch_data()
         classifier = Torch_LSTM(num_classes)
