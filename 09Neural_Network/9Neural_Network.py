@@ -23,6 +23,7 @@ class Skylark_Neural_Network():
         self.w3 = np.random.rand(num_classes, hidden_sizes[1])
     
     def fit(self, X_train, Y_train, epochs, batch_size, learning_rate):
+        # TODO: batch 
         self.X = X_train.T
         self.Y = Y_train.T
         self.learning_rate = learning_rate

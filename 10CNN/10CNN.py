@@ -1,3 +1,10 @@
+import keras
+from keras.datasets import cifar10
+from keras.preprocessing.image import ImageDataGenerator
+from keras.models import Sequential
+from keras.layers import Dense, Dropout, Activation, Flatten
+from keras.layers import Conv2D, MaxPooling2D
+
 from torch import nn
 import torch
 from torch.utils import data
@@ -5,16 +12,13 @@ from torch.utils import data
 import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
-import sys
-sys.path.append("D:\Github\Machine-Learning-Basic-Codes")
+# import sys
+# sys.path.append("D:\Github\Machine-Learning-Basic-Codes")
 
-from sklearn.model_selection import train_test_split
-from sklearn.preprocessing import StandardScaler
+# from utils.visualize import *
+# from utils.tool_func import *
 
-from utils.visualize import *
-from utils.tool_func import *
-
-class Skylark_Neural_Network():
+class Skylark_CNN():
     def __init__(self, input_size, hidden_sizes, num_classes):
         super().__init__()
         # y=wx+b
@@ -59,68 +63,109 @@ class Skylark_Neural_Network():
         y_pred = self.feedforward()
         return np.argmax(np.array(y_pred).T, axis=1).T
 
-class Torch_NN(nn.Module):
+class Keras_CNN():
     def __init__(self, input_size, hidden_sizes, num_classes):
         super().__init__()
-        # define model architecture
+        self.classifier = Sequential([
+            Conv2D(32, (3, 3), padding='same', input_shape=input_size),
+            Activation('relu'),
+            Conv2D(32, (3, 3)),
+            Activation('relu'),
+            MaxPooling2D(pool_size=(2, 2)),
+            Dropout(0.25),
+            
+            Conv2D(64, (3, 3), padding='same'),
+            Activation('relu'),
+            Conv2D(64, (3, 3)),
+            Activation('relu'),
+            MaxPooling2D(pool_size=(2, 2)),
+            Dropout(0.25),
+
+            Flatten(),
+            Dense(512),
+            Activation('relu'),
+            Dropout(0.5),
+            Dense(num_classes),
+            Activation('softmax')
+        ])
+
+    def fit(self, X_train, Y_train, epochs, batch_size, learning_rate=0.0001):
+        X_train = X_train.astype('float32')
+        X_train /= 255
+        # initiate RMSprop optimizer
+        opt = keras.optimizers.RMSprop(lr=learning_rate, decay=1e-6)
+        # Let's train the model using RMSprop
+        self.classifier.compile(loss='categorical_crossentropy', optimizer=opt,
+                    metrics=['accuracy'])
+        self.classifier.fit(X_train, Y_train,
+            batch_size=batch_size,
+            epochs=epochs,
+            shuffle=True)
+
+    def predict(self, X_test):
+        y_pred = self.classifier.predict(X_test)
+        return np.array(y_pred)
+
+class Torch_CNN(nn.Module):
+    def __init__(self, input_size, hidden_sizes, num_classes):
+        super().__init__()
         self.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-        # self.device = torch.device('gpu')
+        # define model architecture
         self.model = nn.Sequential(
-            nn.Linear(input_size, hidden_sizes[0]),
+            nn.Conv2d(3, 6, 5),
             nn.ReLU(),
-            nn.Linear(hidden_sizes[0], hidden_sizes[1]),
+            nn.MaxPool2d(2, 2),
+
+            nn.Conv2d(6, 16, 5),
             nn.ReLU(),
-            nn.Linear(hidden_sizes[1], num_classes),
-            nn.Sigmoid()
+            nn.MaxPool2d(2, 2),
+
+            nn.Flatten(),
+            nn.Linear(16 * 5 * 5, 120),
+            nn.ReLU(),
+            nn.Linear(120, 84),
+            nn.ReLU(),
+            nn.Linear(84, 10)
         ).to(self.device)
-        
         print('Model:\n{}\nDevice: {}'.format(self.model, self.device))
-    #     self.fc1 = nn.Linear(input_size, hidden_size[0]) 
-    #     self.fc2 = nn.Linear(hidden_size[0], hidden_size[1])
-    #     self.fc2 = nn.Linear(hidden_size[1], num_classes)
-    #     
     
-    # def forward(self, x):
-    #     x = self.fc1(x)
-    #     x = nn.ReLU(x)
-    #     x = self.fc2(x)
-    #     x = nn.ReLU(x)
-    #     x = self.fc3(x)
-    #     out=nn.Sigmoid(x)
-    #     return out
-    
-    def fit(self, X_train, Y_train, epochs, batch_size, learning_rate):
+    def fit(self, X_train, Y_train, epochs, batch_size, learning_rate=0.001):
+        # prepare the dataloader
         dtype = torch.cuda.LongTensor if torch.cuda.is_available() else torch.LongTensor
         tensor_x = torch.Tensor(X_train) # transform from array to torch tensor
         tensor_y = torch.Tensor(Y_train)
         MyDataset = data.TensorDataset(tensor_x, tensor_y) # making the dataset
-        # 数据加载器 DataLoader
-        # 训练数据加载器
         train_loader = data.DataLoader(
             dataset=MyDataset, 
             batch_size=batch_size, shuffle=True)
-        total_step = len(train_loader)
         
+        # Define a Loss func & Optimizer
         criterion = nn.CrossEntropyLoss()
-        optimizer = torch.optim.Adam(self.model.parameters(), lr=0.001)
+        optimizer = torch.optim.SGD(self.model.parameters(), lr=learning_rate, momentum=0.9)
 
+        # Training
         for epoch in range(epochs):
-            for i, (x, labels) in enumerate(train_loader):
-                x = x.to(self.device, dtype= torch.float)
+            running_loss = 0.0
+            for i, (inputs, labels) in enumerate(train_loader):
+                inputs = inputs.to(self.device, dtype= torch.float)
                 labels = labels.to(self.device, dtype= torch.long)
 
-                # 前向传播
-                outputs = self.model(x)
+                # Forward
+                outputs = self.model(inputs)
                 loss = criterion(outputs, labels)
 
-                # 反向传播并优化
+                # Backward + Optimize
                 optimizer.zero_grad()  # 注意每步迭代都需要清空梯度缓存
                 loss.backward()
                 optimizer.step()
 
-                if (i+1) % 30 == 0:
-                    print ('Epoch [{}/{}], Step [{}/{}], Loss: {:.4f}' 
-                            .format(epoch+1, epochs, i+1, total_step, loss.item()))
+                # print statistics
+                running_loss += loss.item()
+                if i % 2000 == 1999:    # print every 2000 mini-batches
+                    print('[%d, %5d] loss: %.3f' %
+                        (epoch + 1, i + 1, running_loss / 2000))
+                    running_loss = 0.0
+        print('Finished Training')
 
     def predict(self, X_test):
         X_test = torch.Tensor(X_test).to(self.device)
@@ -129,62 +174,35 @@ class Torch_NN(nn.Module):
         return Y_pred.cpu().detach().numpy()
 
 if __name__ == '__main__':
-    mode = 'self_implement'  # ['use_sklearn', 'use_keras', 'use_torch', 'self_implement']
-    input_size = 2
+    mode = 'use_keras'  # ['use_tf', 'use_keras', 'use_torch', 'self_implement']
+    
     hidden_sizes = [12, 8]
-    num_classes = 2
+    num_classes = 10
     output_size = 1
-    learning_rate = 1e-5
+    learning_rate = 0.0001
 
     # Data Preprocessing
-    dataset = pd.read_csv('./dataset/Social_Network_Ads.csv')
-    X = dataset.iloc[:, [2, 3]].values
-    Y = dataset.iloc[:, 4].values
+    (X_train, Y_train), (X_test, Y_test) = cifar10.load_data()
+    # Convert class vectors to binary class matrices.
+    Y_train = keras.utils.to_categorical(Y_train, num_classes)
+    Y_test = keras.utils.to_categorical(Y_test, num_classes)
+    input_size = X_train.shape[1:]
 
-    # Making Dataset
-    X_train, X_test, Y_train, Y_test = train_test_split(
-        X, Y, test_size=0.25, random_state=0)
-
-    # Feature Scaling
-    sc = StandardScaler()
-    X_train = sc.fit_transform(X_train.astype(np.float64))
-    X_test = sc.transform(X_test.astype(np.float64))
-
-    if mode == 'use_sklearn':
-        from sklearn.neural_network import MLPClassifier
+    if mode == 'use_keras':
+        classifier = Keras_CNN(input_size, hidden_sizes, num_classes)
+        classifier.fit(X_train, Y_train, epochs=100, batch_size=32, learning_rate = learning_rate)
+    elif mode == 'use_torch':
+        classifier = Torch_CNN(input_size, hidden_sizes, num_classes)
+        classifier.fit(X_train, Y_train, epochs=150, batch_size=10, learning_rate = learning_rate)        
+    elif mode == 'use_tf':
         classifier = MLPClassifier(
             solver='lbfgs', alpha=learning_rate, hidden_layer_sizes=hidden_sizes, random_state=1)
         classifier.fit(X_train, Y_train)
-    elif mode == 'use_keras':
-        from keras.models import Sequential
-        from keras.layers import Dense
-        # define the keras model
-        classifier = Sequential()
-        classifier.add(Dense(hidden_sizes[0], input_dim=input_size, activation='relu'))
-        classifier.add(Dense(hidden_sizes[1], activation='relu'))
-        classifier.add(Dense(output_size, activation='sigmoid'))
-        # compile the keras model
-        classifier.compile(loss='binary_crossentropy', optimizer='adam', metrics=['accuracy'])
-        # fit the keras model on the dataset
-        classifier.fit(X_train, Y_train, epochs=150, batch_size=10)
-    elif mode == 'use_torch':
-        classifier = Torch_NN(input_size, hidden_sizes, num_classes)
-        classifier.fit(X_train, Y_train, epochs=150, batch_size=10, learning_rate = learning_rate)        
     elif mode == 'self_implement': # self-implement
-        classifier = Skylark_Neural_Network(input_size, hidden_sizes, num_classes)
+        classifier = Skylark_CNN(input_size, hidden_sizes, num_classes)
         classifier.fit(X_train, Y_train, epochs=100, batch_size=10, learning_rate = learning_rate)
     else:
         print('Attention: Wrong Mode!')
 
     Y_pred = classifier.predict(X_test)
 
-    # # Making the Confusion Matrix
-    # print_confusion_matrix(
-    #     Y_test, Y_pred, clf_name='MLP Classification')
-
-    # Visualising the Training set results
-    visualization_clf(X_train, Y_train, classifier,
-                      clf_name='MLP Classification', set_name='Training')
-    # Visualising the Test set results
-    visualization_clf(X_test, Y_test, classifier,
-                      clf_name='MLP Classification', set_name='Test')
