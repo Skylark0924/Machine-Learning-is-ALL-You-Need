@@ -36,9 +36,9 @@
 ### Neural Network
 9. [Feedforward Neural Network](./09Neural_Network/)
 
-10. Convolutional Neural Network
+10. [Convolutional Neural Network](./10CNN/)
 
-11. LSTM
+11. [LSTM](./11LSTM/)
 
 ### Unsupervised Learning
 12. PCA
