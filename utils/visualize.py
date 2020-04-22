@@ -41,3 +41,9 @@ def mean_squared_error(y_true, y_pred):
     """ Returns the mean squared error between y_true and y_pred """
     mse = np.mean(np.power(y_true - y_pred, 2))
     return mse
+
+
+# 可视化二维数据
+def plot_data_2d(X,marker):
+    plt.plot(X[:,0],X[:,1],marker) 
+    return plt
