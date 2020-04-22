@@ -47,3 +47,29 @@ def mean_squared_error(y_true, y_pred):
 def plot_data_2d(X,marker):
     plt.plot(X[:,0],X[:,1],marker) 
     return plt
+
+# 显示图片
+def display_imageData(imgData):
+    sum = 0
+    '''
+    显示100个数（若是一个一个绘制将会非常慢，可以将要画的图片整理好，放到一个矩阵中，显示这个矩阵即可）
+    - 初始化一个二维数组
+    - 将每行的数据调整成图像的矩阵，放进二维数组
+    - 显示即可
+    '''
+    m,n = imgData.shape
+    width = np.int32(np.round(np.sqrt(n)))
+    height = np.int32(n/width);
+    rows_count = np.int32(np.floor(np.sqrt(m)))
+    cols_count = np.int32(np.ceil(m/rows_count))
+    pad = 1
+    display_array = -np.ones((pad+rows_count*(height+pad),pad+cols_count*(width+pad)))
+    for i in range(rows_count):
+        for j in range(cols_count):
+            max_val = np.max(np.abs(imgData[sum,:]))
+            display_array[pad+i*(height+pad):pad+i*(height+pad)+height,pad+j*(width+pad):pad+j*(width+pad)+width] = imgData[sum,:].reshape(height,width,order="F")/max_val    # order=F指定以列优先，在matlab中是这样的，python中需要指定，默认以行
+            sum += 1
+            
+    plt.imshow(display_array,cmap='gray')   #显示灰度图像
+    plt.axis('off')
+    plt.show()
