@@ -41,7 +41,7 @@
 11. [LSTM](./11LSTM/)
 
 ### Unsupervised Learning
-12. PCA
+12. [PCA](./12PCA/)
 
 13. K-Means
 

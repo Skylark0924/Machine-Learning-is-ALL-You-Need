@@ -17,7 +17,6 @@ class Skylark_PCA():
 
     def transform(self, X_train):
         U = self.SVD_decompose(X_train)
-        Z = np.zeros((X_train.shape[0],self.K))
         Ureduce = U[:, 0:self.K]
         Z = np.dot(X_train, Ureduce)
         self.components_ = np.transpose(Ureduce)
@@ -25,8 +24,8 @@ class Skylark_PCA():
 
     def SVD_decompose(self, X_train):
         m=X_train.shape[0]
-        Sigma = np.dot(np.transpose(X_train), X_train)/m
-        U,S,V = np.linalg.svd(Sigma)
+        Cov = np.dot(np.transpose(X_train), X_train)/m # 协方差阵
+        U,S,V = np.linalg.svd(Cov)
         return U
 
 

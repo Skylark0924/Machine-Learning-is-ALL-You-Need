@@ -73,3 +73,8 @@ def display_imageData(imgData):
     plt.imshow(display_array,cmap='gray')   #显示灰度图像
     plt.axis('off')
     plt.show()
+
+def kmeans_plot(X, centroids):
+    plt.scatter(X[:,0], X[:,1])     # 原数据的散点图
+    plt.plot(centroids[:,0],centroids[:,1],'r^',markersize=10)  # 聚类中心
+    plt.show()
