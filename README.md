@@ -43,7 +43,7 @@
 ### Unsupervised Learning
 12. [PCA](./12PCA/)
 
-13. K-Means
+13. [K-Means](./13Kmeans/)
 
 ### Reinforcement Learning
 14. Deep Q Network
