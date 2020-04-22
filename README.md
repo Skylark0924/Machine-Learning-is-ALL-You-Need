@@ -15,30 +15,30 @@
 - Applications Part: RL + NLP + CV
 
 ### Regression
-1. [Single Linear Regression](./1Single_Linear_Regression/1Single_Linear_Regression.py)
+1. [Single Linear Regression](./01Single_Linear_Regression/1Single_Linear_Regression.py)
 
-2. [Multiple Linear Regression](./2Multiple_Linear_Regression/2Multiple_Linear_Regression.py)
+2. [Multiple Linear Regression](./02Multiple_Linear_Regression/2Multiple_Linear_Regression.py)
 
 ### Classification
-3. [Logistic Regression](./3Logistic_Regression/3Logistic_Regression.py)
+3. [Logistic Regression](./03Logistic_Regression/3Logistic_Regression.py)
 
-4. [KNN](./4K_Nearest_Neighbours/)
+4. [KNN](./04K_Nearest_Neighbours/)
 
-5. [Support Vector Machine](./5Support_Vector_Machine/)
+5. [Support Vector Machine](./05Support_Vector_Machine/)
 
-6. [Naive Bayes](./6Naive_Bayes/)
+6. [Naive Bayes](./06Naive_Bayes/)
 
 ### Regression & Classification
-7. [Decision Tree](./7Decision_Trees/)
+7. [Decision Tree](./07Decision_Trees/)
 
-8. [Random Forest](./8Random_Forest/)
+8. [Random Forest](./08Random_Forest/)
 
 ### Neural Network
-9. Feedforward Neural Network
+9. [Feedforward Neural Network](./09Neural_Network/)
 
-10. Convolutional Neural Network
+10. [Convolutional Neural Network](./10CNN/)
 
-11. LSTM
+11. [LSTM](./11LSTM/)
 
 ### Unsupervised Learning
 12. PCA
@@ -62,4 +62,6 @@
 20. Resnet
 
 ### Natural Language Processing
-21. BERT
+21. Transformer
+
+22. BERT
