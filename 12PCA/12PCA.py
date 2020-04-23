@@ -2,7 +2,7 @@ import numpy as np
 from matplotlib import pyplot as plt
 from scipy import io as spio
 import sys
-sys.path.append("D:/Github/Machine-Learning-Basic-Codes")
+sys.path.append("/home/skylark/Github/Machine-Learning-Basic-Codes")
 
 from sklearn.preprocessing import StandardScaler
 

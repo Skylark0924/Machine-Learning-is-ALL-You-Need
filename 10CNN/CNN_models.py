@@ -17,56 +17,76 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from conv2d import Conv3x3
+from maxpool import MaxPool2
+from softmax import Softmax
+
 class Skylark_CNN():
-    def __init__(self, input_size, hidden_sizes, num_classes):
+    def __init__(self, num_classes):
         super().__init__()
-        # y=wx+b
-        self.w1 = np.random.rand(hidden_sizes[0], input_size)
-        self.w2 = np.random.rand(hidden_sizes[1], hidden_sizes[0])
-        self.w3 = np.random.rand(num_classes, hidden_sizes[1])
+        self.num_classes = num_classes
+        self.conv2d = Conv3x3(8)                # 32x32x1 -> 30x30x8
+        self.pool = MaxPool2()                  # 30x30x8 -> 15x15x8
+        self.softmax = Softmax(15 * 15 * 8, 10) # 15x15x8 -> 10
     
     def fit(self, X_train, Y_train, epochs, batch_size, learning_rate):
-        self.X = X_train.T
-        self.Y = Y_train.T
-        self.learning_rate = learning_rate
-        for i in range(epochs): # trains the NN 1,000 times
-            if i % 50 ==0: 
-                print ("For iteration # " + str(i) + "\n")
-                print ("Loss: \n" + str(np.mean(np.square(Y_train - self.feedforward())))) # mean sum squared loss
-                print ("\n")
-            self.output = self.feedforward()
-            self.backprop()
+        for i in range(epochs): # trains the CNN in epochs
+            loss = 0
+            num_correct = 0
+            for j, (image, label) in enumerate(zip(X_train, Y_train)):
+                if j % 100 == 99:
+                    print(
+                        '[Step %d] Past 100 steps: Average Loss %.3f | Accuracy: %d%%' %
+                        (j + 1, loss / 100, num_correct))
+                    loss = 0
+                    num_correct = 0
+
+                loss, acc = self.train(image, label, lr=learning_rate)
+                loss += loss
+                num_correct += acc
     
-    def feedforward(self):
-        self.layer1 = relu(np.dot(self.w1, self.X))
-        self.layer2 = relu(np.dot(self.w2, self.layer1))
-        self.layer3 = sigmoid(np.dot(self.w3, self.layer2))
-        return self.layer3
+    def forward(self, image, label):
+        out = self.conv2d.forward((image/255)-0.5)
+        out = self.pool.forward(out)
+        out = self.softmax.forward(out)
 
-    def backprop(self):
-        input_data = self.X
-        temp3 = 2*(self.Y - self.output) * sigmoid_derivative(self.output)
-        d_w3 = np.dot(temp3, self.layer2.T)
-        temp2 = np.dot(self.w3.T, temp3) * relu_derivative(self.layer2)
-        d_w2 = np.dot(temp2, self.layer1.T)
-        temp1 = np.dot(self.w2.T, temp2) * relu_derivative(self.layer1)
-        d_w1 = np.dot(temp1, input_data.T)
+        loss = -np.log(out[label])
+        acc = 1 if np.argmax(out) == label else 0
+        return out, loss, acc
 
-        # Update parameters
-        self.w1 += self.learning_rate * d_w1
-        self.w2 += self.learning_rate * d_w2   
-        self.w3 += self.learning_rate * d_w3 
+    def train(self, image, label, lr = 0.005):
+        out, loss, acc = self.forward(image, label)
+
+        # Calculate initial gradient
+        gradient = np.zeros(self.num_classes)
+        gradient[label] = -1 / out[label]
+
+        # Backprop
+        gradient = self.softmax.backprop(gradient, lr)
+        gradient = self.pool.backprop(gradient)
+        gradient = self.conv2d.backprop(gradient, lr)
+        return loss, acc
 
     def predict(self, X_test):
-        self.X = X_test.T
-        y_pred = self.feedforward()
-        return np.argmax(np.array(y_pred).T, axis=1).T
+        out = self.conv2d.forward((X_test/255)-0.5)
+        out = self.pool.forward(out)
+        y_pred = self.softmax.forward(out)
+        return y_pred
+    
+    def evaluate(self, X_test, Y_test):
+        num_correct = 0
+        total_loss = 0
+        for j, (image, label) in enumerate(zip(X_test, Y_test)):
+            _, loss, acc = self.forward(image, label)
+            num_correct += acc
+            total_loss += loss
+        print('Test loss: {}\nTest accuracy: {}'.format(total_loss/X_test.shape[0], num_correct/X_test.shape[0]))
 
 class Keras_CNN():
     def __init__(self, input_size, hidden_sizes, num_classes):
         super().__init__()
         self.classifier = Sequential([
-            Conv2D(32, (3, 3), padding='same', input_shape=input_size),
+            Conv2D(filters=32, kernel_size=(3, 3), padding='same', input_shape=input_size), # https://keras-cn.readthedocs.io/en/latest/layers/convolutional_layer/
             Activation('relu'),
             Conv2D(32, (3, 3)),
             Activation('relu'),
@@ -303,7 +323,7 @@ class TF_CNN():
         print('Loss: {:>10.4f} Validation Accuracy: {:.6f}'.format(loss, valid_acc))
 
 
-def keras_data():
+def keras_data(num_classes):
     # Data Preprocessing
     (X_train, Y_train), (X_test, Y_test) = cifar10.load_data()
     # Convert class vectors to binary class matrices.
@@ -350,3 +370,14 @@ def one_hot_encode(x):
         encoded[idx][val] = 1
 
     return encoded
+
+def rgb2gray(rgb):
+    """Convert from color image (RGB) to grayscale.
+       Source: opencv.org
+       grayscale = 0.299*red + 0.587*green + 0.114*blue
+    Argument:
+        rgb (tensor): rgb image
+    Return:
+        (tensor): grayscale image
+    """
+    return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])
