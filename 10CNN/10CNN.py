@@ -4,7 +4,6 @@ from CNN_models import *
 if __name__ == '__main__':
     mode = 'use_tf'  # ['use_tf', 'use_keras', 'use_torch', 'self_implement']
     
-    hidden_sizes = [12, 8]
     num_classes = 10
     learning_rate = 0.0001
 
@@ -20,7 +19,7 @@ if __name__ == '__main__':
         classifier.fit(trainloader, epochs=5, batch_size=10, learning_rate = learning_rate)
         classifier.evaluate(testloader)      
     elif mode == 'use_tf':
-        X_train, Y_train, X_test, Y_test = keras_data(num_classes) ## CIFAR10 data
+        X_train, Y_train, X_test, Y_test = keras_data(num_classes)
         X_train = rgb2gray(X_train)         # (32, 32, 3) -> (32, 32)
         X_test = rgb2gray(X_test)
         input_size = X_train.shape[1] * X_train.shape[2]
