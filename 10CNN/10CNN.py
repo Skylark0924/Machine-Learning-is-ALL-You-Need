@@ -2,7 +2,7 @@ import mnist
 from CNN_models import *
 
 if __name__ == '__main__':
-    mode = 'self_implement'  # ['use_tf', 'use_keras', 'use_torch', 'self_implement']
+    mode = 'use_tf'  # ['use_tf', 'use_keras', 'use_torch', 'self_implement']
     
     hidden_sizes = [12, 8]
     num_classes = 10
@@ -20,8 +20,14 @@ if __name__ == '__main__':
         classifier.fit(trainloader, epochs=5, batch_size=10, learning_rate = learning_rate)
         classifier.evaluate(testloader)      
     elif mode == 'use_tf':
-        classifier = TF_CNN() # TODO
-        classifier.fit(X_train, Y_train)
+        X_train, Y_train, X_test, Y_test = keras_data(num_classes) ## CIFAR10 data
+        X_train = rgb2gray(X_train)         # (32, 32, 3) -> (32, 32)
+        X_test = rgb2gray(X_test)
+        input_size = X_train.shape[1] * X_train.shape[2]
+        classifier = TF_CNN(input_size, num_classes) # TODO: gradient disappear
+        with tf.Session() as sess:
+            classifier.fit(X_train, Y_train, sess, epochs=1000)
+            classifier.evaluate(X_test, Y_test, sess)
     elif mode == 'self_implement': # self-implement
         # X_train = mnist.train_images()[:1000] ## mnist data
         # Y_train = mnist.train_labels()[:1000]

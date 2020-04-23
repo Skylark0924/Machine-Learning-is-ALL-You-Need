@@ -241,3 +241,4 @@ CNN的主体就是`卷积+池化+全连接`三步，self-implement简单地构�
 1. [Forward And Backpropagation in Convolutional Neural Network](https://medium.com/@2017csm1006/forward-and-backpropagation-in-convolutional-neural-network-4dfa96d7b37e)
 2. [Back Propagation in Convolutional Neural Networks — Intuition and Code](https://becominghuman.ai/back-propagation-in-convolutional-neural-networks-intuition-and-code-714ef1c38199)
 3. [池化层（pooling）的反向传播是怎么实现的](https://blog.csdn.net/Jason_yyz/article/details/80003271)
+4. [使用tensorflow构建卷积神经网络（CNN）](https://zhuanlan.zhihu.com/p/30911463)
