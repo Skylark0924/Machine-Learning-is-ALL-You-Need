@@ -17,56 +17,76 @@ import numpy as np
 import matplotlib.pyplot as plt
 import pandas as pd
 
+from conv2d import Conv3x3
+from maxpool import MaxPool2
+from softmax import Softmax
+
 class Skylark_CNN():
-    def __init__(self, input_size, hidden_sizes, num_classes):
+    def __init__(self, num_classes):
         super().__init__()
-        # y=wx+b
-        self.w1 = np.random.rand(hidden_sizes[0], input_size)
-        self.w2 = np.random.rand(hidden_sizes[1], hidden_sizes[0])
-        self.w3 = np.random.rand(num_classes, hidden_sizes[1])
+        self.num_classes = num_classes
+        self.conv2d = Conv3x3(8)                # 32x32x1 -> 30x30x8
+        self.pool = MaxPool2()                  # 30x30x8 -> 15x15x8
+        self.softmax = Softmax(15 * 15 * 8, 10) # 15x15x8 -> 10
     
     def fit(self, X_train, Y_train, epochs, batch_size, learning_rate):
-        self.X = X_train.T
-        self.Y = Y_train.T
-        self.learning_rate = learning_rate
-        for i in range(epochs): # trains the NN 1,000 times
-            if i % 50 ==0: 
-                print ("For iteration # " + str(i) + "\n")
-                print ("Loss: \n" + str(np.mean(np.square(Y_train - self.feedforward())))) # mean sum squared loss
-                print ("\n")
-            self.output = self.feedforward()
-            self.backprop()
+        for i in range(epochs): # trains the CNN in epochs
+            loss = 0
+            num_correct = 0
+            for j, (image, label) in enumerate(zip(X_train, Y_train)):
+                if j % 100 == 99:
+                    print(
+                        '[Step %d] Past 100 steps: Average Loss %.3f | Accuracy: %d%%' %
+                        (j + 1, loss / 100, num_correct))
+                    loss = 0
+                    num_correct = 0
+
+                loss, acc = self.train(image, label, lr=learning_rate)
+                loss += loss
+                num_correct += acc
     
-    def feedforward(self):
-        self.layer1 = relu(np.dot(self.w1, self.X))
-        self.layer2 = relu(np.dot(self.w2, self.layer1))
-        self.layer3 = sigmoid(np.dot(self.w3, self.layer2))
-        return self.layer3
+    def forward(self, image, label):
+        out = self.conv2d.forward((image/255)-0.5)
+        out = self.pool.forward(out)
+        out = self.softmax.forward(out)
 
-    def backprop(self):
-        input_data = self.X
-        temp3 = 2*(self.Y - self.output) * sigmoid_derivative(self.output)
-        d_w3 = np.dot(temp3, self.layer2.T)
-        temp2 = np.dot(self.w3.T, temp3) * relu_derivative(self.layer2)
-        d_w2 = np.dot(temp2, self.layer1.T)
-        temp1 = np.dot(self.w2.T, temp2) * relu_derivative(self.layer1)
-        d_w1 = np.dot(temp1, input_data.T)
+        loss = -np.log(out[label])
+        acc = 1 if np.argmax(out) == label else 0
+        return out, loss, acc
 
-        # Update parameters
-        self.w1 += self.learning_rate * d_w1
-        self.w2 += self.learning_rate * d_w2   
-        self.w3 += self.learning_rate * d_w3 
+    def train(self, image, label, lr = 0.005):
+        out, loss, acc = self.forward(image, label)
+
+        # Calculate initial gradient
+        gradient = np.zeros(self.num_classes)
+        gradient[label] = -1 / out[label]
+
+        # Backprop
+        gradient = self.softmax.backprop(gradient, lr)
+        gradient = self.pool.backprop(gradient)
+        gradient = self.conv2d.backprop(gradient, lr)
+        return loss, acc
 
     def predict(self, X_test):
-        self.X = X_test.T
-        y_pred = self.feedforward()
-        return np.argmax(np.array(y_pred).T, axis=1).T
+        out = self.conv2d.forward((X_test/255)-0.5)
+        out = self.pool.forward(out)
+        y_pred = self.softmax.forward(out)
+        return y_pred
+    
+    def evaluate(self, X_test, Y_test):
+        num_correct = 0
+        total_loss = 0
+        for j, (image, label) in enumerate(zip(X_test, Y_test)):
+            _, loss, acc = self.forward(image, label)
+            num_correct += acc
+            total_loss += loss
+        print('Test loss: {}\nTest accuracy: {}'.format(total_loss/X_test.shape[0], num_correct/X_test.shape[0]))
 
 class Keras_CNN():
     def __init__(self, input_size, hidden_sizes, num_classes):
         super().__init__()
         self.classifier = Sequential([
-            Conv2D(32, (3, 3), padding='same', input_shape=input_size),
+            Conv2D(filters=32, kernel_size=(3, 3), padding='same', input_shape=input_size), # https://keras-cn.readthedocs.io/en/latest/layers/convolutional_layer/
             Activation('relu'),
             Conv2D(32, (3, 3)),
             Activation('relu'),
@@ -184,126 +204,118 @@ class Torch_CNN(nn.Module):
             100 * correct / total))
 
 class TF_CNN():
-    def __init__(self):
+    def __init__(self, input_size, num_classes):
         super().__init__()
-    
-    def conv_net(self, x, keep_prob):
-        conv1_filter = tf.Variable(tf.truncated_normal(shape=[3, 3, 3, 64], mean=0, stddev=0.08))
-        conv2_filter = tf.Variable(tf.truncated_normal(shape=[3, 3, 64, 128], mean=0, stddev=0.08))
-        conv3_filter = tf.Variable(tf.truncated_normal(shape=[5, 5, 128, 256], mean=0, stddev=0.08))
-        conv4_filter = tf.Variable(tf.truncated_normal(shape=[5, 5, 256, 512], mean=0, stddev=0.08))
+        self.num_classes = num_classes
+        self.input_size = input_size
+        self.X = tf.placeholder(tf.float32, [None, self.input_size])
+        self.Y = tf.placeholder(tf.float32, [None, self.num_classes])
+        self.keep_prob = tf.placeholder(tf.float32)
 
-        # 1, 2
-        conv1 = tf.nn.conv2d(x, conv1_filter, strides=[1,1,1,1], padding='SAME')
-        conv1 = tf.nn.relu(conv1)
-        conv1_pool = tf.nn.max_pool(conv1, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME')
-        conv1_bn = tf.layers.batch_normalization(conv1_pool)
+    def conv2d(self, x, W, b, strides=1):
+        # Conv2D wrapper, with bias and relu activation
+        x = tf.nn.conv2d(x, W, strides=[1, strides, strides, 1], padding='SAME')
+        x = tf.nn.bias_add(x, b)
+        return tf.nn.relu(x)
 
-        # 3, 4
-        conv2 = tf.nn.conv2d(conv1_bn, conv2_filter, strides=[1,1,1,1], padding='SAME')
-        conv2 = tf.nn.relu(conv2)
-        conv2_pool = tf.nn.max_pool(conv2, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME')    
-        conv2_bn = tf.layers.batch_normalization(conv2_pool)
-    
-        # 5, 6
-        conv3 = tf.nn.conv2d(conv2_bn, conv3_filter, strides=[1,1,1,1], padding='SAME')
-        conv3 = tf.nn.relu(conv3)
-        conv3_pool = tf.nn.max_pool(conv3, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME')  
-        conv3_bn = tf.layers.batch_normalization(conv3_pool)
-        
-        # 7, 8
-        conv4 = tf.nn.conv2d(conv3_bn, conv4_filter, strides=[1,1,1,1], padding='SAME')
-        conv4 = tf.nn.relu(conv4)
-        conv4_pool = tf.nn.max_pool(conv4, ksize=[1,2,2,1], strides=[1,2,2,1], padding='SAME')
-        conv4_bn = tf.layers.batch_normalization(conv4_pool)
-        
-        # 9
-        flat = tf.contrib.layers.flatten(conv4_bn)  
+    def maxpool2d(self, x, k=2):
+        # MaxPool2D wrapper
+        return tf.nn.max_pool(x, ksize=[1, k, k, 1], strides=[1, k, k, 1],
+                            padding='SAME')
 
-        # 10
-        full1 = tf.contrib.layers.fully_connected(inputs=flat, num_outputs=128, activation_fn=tf.nn.relu)
-        full1 = tf.nn.dropout(full1, keep_prob)
-        full1 = tf.layers.batch_normalization(full1)
-        
-        # 11
-        full2 = tf.contrib.layers.fully_connected(inputs=full1, num_outputs=256, activation_fn=tf.nn.relu)
-        full2 = tf.nn.dropout(full2, keep_prob)
-        full2 = tf.layers.batch_normalization(full2)
-        
-        # 12
-        full3 = tf.contrib.layers.fully_connected(inputs=full2, num_outputs=512, activation_fn=tf.nn.relu)
-        full3 = tf.nn.dropout(full3, keep_prob)
-        full3 = tf.layers.batch_normalization(full3)    
-        
-        # 13
-        full4 = tf.contrib.layers.fully_connected(inputs=full3, num_outputs=1024, activation_fn=tf.nn.relu)
-        full4 = tf.nn.dropout(full4, keep_prob)
-        full4 = tf.layers.batch_normalization(full4)        
-        
-        # 14
-        out = tf.contrib.layers.fully_connected(inputs=full4, num_outputs=10, activation_fn=None)
+    #创建模型
+    def conv_net(self, x, weights, biases, dropout):
+        x = tf.reshape(x, shape=[-1, 32, 32, 1])
+        # Convolution Layer
+        conv1 = self.conv2d(x, weights['wc1'], biases['bc1'])
+        # Max Pooling (down-sampling)
+        conv1 = self.maxpool2d(conv1, k=2)
+
+        # Convolution Layer
+        conv2 = self.conv2d(conv1, weights['wc2'], biases['bc2'])
+        # Max Pooling (down-sampling)
+        conv2 = self.maxpool2d(conv2, k=2)
+
+        # Fully connected layer
+        # Reshape conv2 output to fit fully connected layer input
+        fc1 = tf.reshape(conv2, [-1, weights['wd1'].get_shape().as_list()[0]])
+        fc1 = tf.add(tf.matmul(fc1, weights['wd1']), biases['bd1'])
+        fc1 = tf.nn.relu(fc1)
+
+        # Apply Dropout
+        fc1 = tf.nn.dropout(fc1, dropout)
+        # Output, class prediction
+        out = tf.add(tf.matmul(fc1, weights['out']), biases['out'])
         return out
 
-    def fit(self, X_train, Y_train, epochs, batch_size, learning_rate=0.0001):
-        # Remove previous weights, bias, inputs, etc..
-        tf.reset_default_graph()
-        keep_probability = 0.7
-        # Inputs
-        x = tf.placeholder(tf.float32, shape=(None, 32, 32, 3), name='input_x')
-        y =  tf.placeholder(tf.float32, shape=(None, 10), name='output_y')
-        self.keep_prob = tf.placeholder(tf.float32, name='keep_prob')
+    def init_para(self, num_classes):
+        # 设置权重和偏移
+        weights = {
+            # 5x5 conv, 1 input, 32 outputs
+            'wc1': tf.Variable(tf.random_normal([5, 5, 1, 32])), ### 32
+            # 5x5 conv, 32 inputs, 64 outputs
+            'wc2': tf.Variable(tf.random_normal([5, 5, 32, 64])),
+            # fully connected, 7*7*64 inputs, 1024 outputs
+            'wd1': tf.Variable(tf.random_normal([8*8*64, 1024])),
+            # 1024 inputs, 10 outputs (class prediction)
+            'out': tf.Variable(tf.random_normal([1024, num_classes]))
+        }
+
+        biases = {
+            'bc1': tf.Variable(tf.random_normal([32])),
+            'bc2': tf.Variable(tf.random_normal([64])),
+            'bd1': tf.Variable(tf.random_normal([1024])),
+            'out': tf.Variable(tf.random_normal([num_classes]))
+        }
+        return weights, biases
+
+    def fit(self, X_train, Y_train, sess, epochs, dropout=0.75, batch_size=128, learning_rate=0.001):
+        weights, biases = self.init_para(self.num_classes)
+        X_train = X_train.reshape((X_train.shape[0], self.input_size))
+        # Construct model
+        logits = self.conv_net(self.X, weights, biases, self.keep_prob)
+        prediction = tf.nn.softmax(logits)
+        pred = tf.argmax(prediction, 1)
+
+        # Define loss and optimizer
+        self.loss_op = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(
+            logits=logits, labels=self.Y))
+        self.optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
+        self.train_op = self.optimizer.minimize(self.loss_op)
+
+        # Evaluate model
+        self.correct_pred = tf.equal(pred, tf.argmax(self.Y, 1))
+        self.accuracy = tf.reduce_mean(tf.cast(self.correct_pred, tf.float32))
+
+        self.init = tf.global_variables_initializer()
+        # saver = tf.train.Saver(tf.trainable_variables())
         
-        logits = self.conv_net(X_train, keep_prob)
+        self.train(X_train, Y_train, sess, epochs, dropout, batch_size, learning_rate)
 
-        # Loss and Optimizer
-        cost = tf.reduce_mean(tf.nn.softmax_cross_entropy_with_logits(logits=logits, labels=y))
-        optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate).minimize(cost)
+    def train(self, X_train, Y_train, sess, epochs, dropout=0.75, batch_size=128, learning_rate=0.001):
+        display_step = 50 #显示间隔
+        sess.run(self.init)
+        for epoch in range(1, epochs+1):
+            batch_x, batch_y = X_train[batch_size*(epoch-1): batch_size*epoch], Y_train[batch_size*(epoch-1): batch_size*epoch]
+            # Run optimization op (backprop)
+            sess.run(self.train_op, feed_dict={self.X: batch_x, self.Y: batch_y, self.keep_prob: dropout})
+            if epoch % display_step == 0 or epoch == 1:
+                # Calculate batch loss and accuracy
+                loss, acc = sess.run([self.loss_op, self.accuracy], feed_dict={self.X: batch_x,
+                                                                    self.Y: batch_y,
+                                                                    self.keep_prob: 1.0})
+                print("Step " + str(epoch) + ", Minibatch Loss={:.4f}".format(loss) + ", Training Accuracy={:.3f}".format(acc))
 
-        # Accuracy
-        correct_pred = tf.equal(tf.argmax(logits, 1), tf.argmax(y, 1))
-        accuracy = tf.reduce_mean(tf.cast(correct_pred, tf.float32), name='accuracy')
         
-        with tf.Session() as sess:
-            # Initializing the variables
-            sess.run(tf.global_variables_initializer())
-            
-            # Training cycle
-            for epoch in range(epochs):
-                # Loop over all batches
-                n_batches = 5
-                for batch_i in range(1, n_batches + 1):
-                    for batch_features, batch_labels in load_preprocess_training_batch(batch_i, batch_size):
-                        self.train_neural_network(sess, optimizer, keep_probability, batch_features, batch_labels)
-                            
-                        print('Epoch {:>2}, CIFAR-10 Batch {}:  '.format(epoch + 1, batch_i), end='')
-                        self.print_stats(sess, batch_features, batch_labels, cost, accuracy)
-    
-    def train_neural_network(self, session, optimizer, keep_probability, feature_batch, label_batch):
-        session.run(optimizer, 
-                    feed_dict={
-                        x: feature_batch,
-                        y: label_batch,
-                        keep_prob: keep_probability
-                    })
-
-    def print_stats(self, sess, feature_batch, label_batch, cost, accuracy):
-        loss = sess.run(cost, 
-                        feed_dict={
-                            x: feature_batch,
-                            y: label_batch,
-                            keep_prob: 1.
-                        })
-        valid_acc = sess.run(accuracy, 
-                            feed_dict={
-                                x: valid_features,
-                                y: valid_labels,
-                                keep_prob: 1.
-                            })
-        
-        print('Loss: {:>10.4f} Validation Accuracy: {:.6f}'.format(loss, valid_acc))
+    def evaluate(self, X_test, Y_test, sess):
+        X_test = X_test.reshape((X_test.shape[0], self.input_size))
+        print('Test Acc: {}'.format(sess.run(self.accuracy, feed_dict={self.X: X_test[:500],
+                                        self.Y: Y_test[:500],
+                                        self.keep_prob: 1.0})))
 
 
-def keras_data():
+
+def keras_data(num_classes):
     # Data Preprocessing
     (X_train, Y_train), (X_test, Y_test) = cifar10.load_data()
     # Convert class vectors to binary class matrices.
@@ -350,3 +362,14 @@ def one_hot_encode(x):
         encoded[idx][val] = 1
 
     return encoded
+
+def rgb2gray(rgb):
+    """Convert from color image (RGB) to grayscale.
+       Source: opencv.org
+       grayscale = 0.299*red + 0.587*green + 0.114*blue
+    Argument:
+        rgb (tensor): rgb image
+    Return:
+        (tensor): grayscale image
+    """
+    return np.dot(rgb[...,:3], [0.299, 0.587, 0.114])

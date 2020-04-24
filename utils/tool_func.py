@@ -71,3 +71,17 @@ def relu(z):
 
 def relu_derivative(z):
     return np.maximum(z, 0)
+
+def tanh(z):
+    return np.tanh(z)
+
+def tanh_derivative(z):
+    return 1-(z**2)
+
+#softmax activation
+def softmax(X):
+    exp_X = np.exp(X)
+    exp_X_sum = np.sum(exp_X,axis=1).reshape(-1,1)
+    exp_X = exp_X/exp_X_sum
+    return exp_X
+
