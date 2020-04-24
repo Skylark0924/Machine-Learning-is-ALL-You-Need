@@ -1,7 +1,7 @@
 from LSTM_models import *
 
 if __name__ == '__main__':
-    mode = 'use_torch'  # ['use_tf', 'use_keras', 'use_torch', 'self_implement']
+    mode = 'self_implement'  # ['use_tf', 'use_keras', 'use_torch', 'self_implement']
     embed_size = 128
     hidden_size = 1024
     num_epochs = 50
@@ -59,7 +59,11 @@ if __name__ == '__main__':
         model = TF_LSTM() # TODO
         model.fit(X_train, Y_train)
     elif mode == 'self_implement': # self-implement
-        model = Skylark_LSTM(input_size, hidden_sizes, num_classes)
-        model.fit(X_train, Y_train, epochs=100, batch_size=10, learning_rate = learning_rate)
+        train_data, valid_data, test_data, vocabulary, reversed_dictionary = keras_data()
+        a = np.ones(128).reshape(1, -1) / 2
+        b = np.ones(128).reshape(1, -1) / 2
+        init_state = (a,b)
+        model = Skylark_LSTM()
+        model.fit(train_data, valid_data, init_state)
     else:
         print('Attention: Wrong Mode!')
