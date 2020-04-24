@@ -45,23 +45,26 @@
 
 13. [K-Means](./13Kmeans/)
 
+### Ensemble Model
+14. [Boosting](./14Boost/)
+
 ### Reinforcement Learning
-14. Deep Q Network
+15. Deep Q Network
 
-15. Policy Proximate Optimization
+16. Policy Proximate Optimization
 
-16. Deep Deterministic Policy Gradient
+17. Deep Deterministic Policy Gradient
 
-17. Actor Critic
+18. Actor Critic
 
-18. Soft Actor Critic
+19. Soft Actor Critic
 
 ### Computer Vision
-19. GAN 
+20. GAN 
 
-20. Resnet
+21. Resnet
 
 ### Natural Language Processing
-21. Transformer
+22. Transformer
 
-22. BERT
+23. BERT
