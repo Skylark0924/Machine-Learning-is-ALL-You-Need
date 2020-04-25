@@ -90,3 +90,65 @@ def cross_entropy(predictions, targets, epsilon=1e-12):
     N = predictions.shape[0]
     ce = - np.sum(targets*np.log(predictions)) / N
     return ce
+
+class LeastSquaresLoss():
+    """Least squares loss"""
+
+    def gradient(self, actual, predicted):
+        return actual - predicted
+
+    def hess(self, actual, predicted):
+        return np.ones_like(actual)
+
+class Loss(object):
+    def loss(self, y_true, y_pred):
+        return NotImplementedError()
+
+    def gradient(self, y, y_pred):
+        raise NotImplementedError()
+
+    def acc(self, y, y_pred):
+        return 0
+
+class SquareLoss(Loss):
+    def __init__(self): pass
+
+    def loss(self, y, y_pred):
+        return 0.5 * np.power((y - y_pred), 2)
+
+    def gradient(self, y, y_pred):
+        return -(y - y_pred)
+
+class CrossEntropy(Loss):
+    def __init__(self): pass
+
+    def loss(self, y, p):
+        # Avoid division by zero
+        p = np.clip(p, 1e-15, 1 - 1e-15)
+        return - y * np.log(p) - (1 - y) * np.log(1 - p)
+
+    def acc(self, y, p):
+        return accuracy_score(np.argmax(y, axis=1), np.argmax(p, axis=1))
+
+    def gradient(self, y, p):
+        # Avoid division by zero
+        p = np.clip(p, 1e-15, 1 - 1e-15)
+        return - (y / p) + (1 - y) / (1 - p)
+
+
+class SotfMaxLoss(Loss):
+    def gradient(self, y, p):
+        return y - p
+
+def accuracy_score(y_true, y_pred):
+    """ Compare y_true to y_pred and return the accuracy """
+    accuracy = np.sum(y_true == y_pred, axis=0) / len(y_true)
+    return 
+
+def to_categorical(x, n_col=None):
+    """ One-hot encoding of nominal values """
+    if not n_col:
+        n_col = np.amax(x) + 1
+    one_hot = np.zeros((x.shape[0], n_col))
+    one_hot[np.arange(x.shape[0]), x] = 1
+    return one_hot

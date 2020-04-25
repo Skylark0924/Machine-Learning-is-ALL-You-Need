@@ -1,7 +1,16 @@
 from matplotlib.colors import ListedColormap
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.axes._axes import _log as matplotlib_axes_logger
+matplotlib_axes_logger.setLevel('ERROR')
 from sklearn.metrics import confusion_matrix
+
+import progressbar
+
+bar_widgets = [
+    'Training: ', progressbar.Percentage(), ' ', progressbar.Bar(marker="-", left="[", right="]"),
+    ' ', progressbar.ETA()
+]
 
 
 def visualization_clf(X_train, Y_train, classifier, clf_name, set_name):
