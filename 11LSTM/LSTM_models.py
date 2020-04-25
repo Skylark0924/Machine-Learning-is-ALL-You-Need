@@ -23,9 +23,10 @@ sys.path.append("/home/skylark/Github/Machine-Learning-Basic-Codes")
 from utils.tool_func import *
 
 class Skylark_LSTM():
-    def __init__(self):
-        self.H = 128 # Number of LSTM layer's neurons
-        self.D = 10000 # Number of input dimension == number of items in vocabulary
+    def __init__(self, input_size, hidden_size, seq_length):
+        self.seq_length = seq_length 
+        self.H = hidden_size # Number of LSTM layer's neurons
+        self.D = input_size # Number of input dimension == number of items in vocabulary
         Z = self.H + self.D # Because we will concatenate LSTM state with the input
 
         self.model = dict(
@@ -138,81 +139,55 @@ class Skylark_LSTM():
 
         return grad, state
 
-    def fit(self, X_train, y_train, state):
+    def fit(self, X_train, batch_size, epochs, state):
         probs = []
         caches = []
         loss = 0.
         h, c = state
-
         print('Forward Start')
 
-        # Forward Step
-        for x, y_true in zip(X_train, y_train):
-            prob, state, cache = self.lstm_forward(x, state)
-            loss += cross_entropy(prob, y_true)
+        for epoch in range(epochs):
+            for i in range(0, self.D - self.seq_length, self.seq_length):
+                # Get mini-batch inputs and targets
+                inputs = X_train[i:i+self.seq_length]
+                targets = X_train[(i+1):(i+1)+self.seq_length]
 
-            # Store forward step result to be used in backward step
-            probs.append(prob)
-            caches.append(cache)
+                # Forward Step
+                for x, y_true in zip(inputs, targets):
+                    prob, state, cache = self.lstm_forward(x, state)
+                    loss += cross_entropy(prob, y_true)
 
-        print('Forward Finish')
-        # The loss is the average cross entropy
-        loss /= np.array(X_train).shape[0]
+                    # Store forward step result to be used in backward step
+                    probs.append(prob)
+                    caches.append(cache)
+                print('Forward Finish')
+                # The loss is the average cross entropy
+                loss /= np.array(inputs).shape[0]
 
-        # Backward Step
-        # Gradient for dh_next and dc_next is zero for the last timestep
-        d_next = (np.zeros_like(h), np.zeros_like(c))
-        grads = {k: np.zeros_like(v) for k, v in self.model.items()}
+                # Backward Step
+                # Gradient for dh_next and dc_next is zero for the last timestep
+                d_next = (np.zeros_like(h), np.zeros_like(c))
+                grads = {k: np.zeros_like(v) for k, v in self.model.items()}
 
-        # Go backward from the last timestep to the first
-        for prob, y_true, cache in reversed(list(zip(probs, y_train, caches))):
-            grad, d_next = self.lstm_backward(prob, y_true, d_next, cache)
+                # Go backward from the last timestep to the first
+                for prob, y_true, cache in reversed(list(zip(probs, targets, caches))):
+                    grad, d_next = self.lstm_backward(prob, y_true, d_next, cache)
 
-            # Accumulate gradients from all timesteps
-            for k in grads.keys():
-                grads[k] += grad[k]
+                    # Accumulate gradients from all timesteps
+                    for k in grads.keys():
+                        grads[k] += grad[k]
+                print('Backward Finish')
 
         print('Loss：{}'.format(loss))
         return grads, loss, state
 
-
-class KerasBatchGenerator(object):
-
-    def __init__(self, data, num_steps, batch_size, vocabulary, skip_step=5):
-        self.data = data
-        self.num_steps = num_steps
-        self.batch_size = batch_size
-        self.vocabulary = vocabulary
-        # this will track the progress of the batches sequentially through the
-        # data set - once the data reaches the end of the data set it will reset
-        # back to zero
-        self.current_idx = 0
-        # skip_step is the number of words which will be skipped before the next
-        # batch is skimmed from the data set
-        self.skip_step = skip_step
-
-    def generate(self):
-        x = np.zeros((self.batch_size, self.num_steps))
-        y = np.zeros((self.batch_size, self.num_steps, self.vocabulary))
-        while True:
-            for i in range(self.batch_size):
-                if self.current_idx + self.num_steps >= len(self.data):
-                    # reset the index back to the start of the data set
-                    self.current_idx = 0
-                x[i, :] = self.data[self.current_idx:self.current_idx + self.num_steps]
-                temp_y = self.data[self.current_idx + 1:self.current_idx + self.num_steps + 1]
-                # convert all of temp_y into a one hot representation
-                y[i, :, :] = to_categorical(temp_y, num_classes=self.vocabulary)
-                self.current_idx += self.skip_step
-            yield x, y
-
 class Keras_LSTM():
-    def __init__(self, vocabulary, hidden_size, num_steps, use_dropout=True):
+    def __init__(self, vocabulary, hidden_size, seq_length, use_dropout=True):
         super().__init__()
         self.vocabulary = vocabulary
-        self.num_steps = num_steps
+        self.seq_length = seq_length
         self.model = Sequential()
-        self.model.add(Embedding(vocabulary, hidden_size, input_length=self.num_steps))
+        self.model.add(Embedding(vocabulary, hidden_size, input_length=self.seq_length))
         self.model.add(LSTM(hidden_size, return_sequences=True))
         self.model.add(LSTM(hidden_size, return_sequences=True))
         if use_dropout:
@@ -223,20 +198,20 @@ class Keras_LSTM():
     
     def fit(self, train_data, valid_data, batch_size, num_epochs):
         checkpointer = ModelCheckpoint('./log/Keras_LSTM/model-{epoch:02d}.hdf5', verbose=1)
-        train_data_generator = KerasBatchGenerator(train_data, self.num_steps, batch_size, self.vocabulary,
-                                           skip_step=self.num_steps)
-        valid_data_generator = KerasBatchGenerator(valid_data, self.num_steps, batch_size, self.vocabulary,
-                                           skip_step=self.num_steps)
+        train_data_generator = KerasBatchGenerator(train_data, self.seq_length, batch_size, self.vocabulary,
+                                           skip_step=self.seq_length)
+        valid_data_generator = KerasBatchGenerator(valid_data, self.seq_length, batch_size, self.vocabulary,
+                                           skip_step=self.seq_length)
         # initiate Adam optimizer
         opt = keras.optimizers.Adam()
         # Let's train the model using Adam
         self.model.compile(loss='categorical_crossentropy', optimizer=opt , metrics=['categorical_accuracy'])
-        self.model.fit_generator(train_data_generator.generate(), len(train_data)//(batch_size*self.num_steps), num_epochs,
+        self.model.fit_generator(train_data_generator.generate(), len(train_data)//(batch_size*self.seq_length), num_epochs,
                     validation_data=valid_data_generator.generate(),
-                    validation_steps=len(valid_data)//(batch_size*self.num_steps), callbacks=[checkpointer])
+                    validation_steps=len(valid_data)//(batch_size*self.seq_length), callbacks=[checkpointer])
     
     def evaluate(self, test_data, reversed_dictionary):
-        example_test_generator = KerasBatchGenerator(test_data, self.num_steps, 1, self.vocabulary,
+        example_test_generator = KerasBatchGenerator(test_data, self.seq_length, 1, self.vocabulary,
                                                      skip_step=1)
         dummy_iters = 40
         num_predict = 10
@@ -245,8 +220,8 @@ class Keras_LSTM():
         for i in range(num_predict):
             data = next(example_test_generator.generate())
             prediction = self.model.predict(data[0])
-            predict_word = np.argmax(prediction[:, self.num_steps - 1, :])
-            true_print_out += reversed_dictionary[test_data[self.num_steps + dummy_iters + i]] + " "
+            predict_word = np.argmax(prediction[:, self.seq_length - 1, :])
+            true_print_out += reversed_dictionary[test_data[self.seq_length + dummy_iters + i]] + " "
             pred_print_out += reversed_dictionary[predict_word] + " "
         print(true_print_out)
         print(pred_print_out)
@@ -289,6 +264,38 @@ class Torch_LSTM(nn.Module):
     #     return out, (h, c)
 
 
+### ----------------------------------- 数据处理部分 ---------------------------------------
+## --------------- Keras data processing --------------
+class KerasBatchGenerator(object):
+    def __init__(self, data, seq_length, batch_size, vocabulary, skip_step=5):
+        self.data = data
+        self.seq_length = seq_length
+        self.batch_size = batch_size
+        self.vocabulary = vocabulary
+        # this will track the progress of the batches sequentially through the
+        # data set - once the data reaches the end of the data set it will reset
+        # back to zero
+        self.current_idx = 0
+        # skip_step is the number of words which will be skipped before the next
+        # batch is skimmed from the data set
+        self.skip_step = skip_step
+
+    def generate(self):
+        x = np.zeros((self.batch_size, self.seq_length))
+        y = np.zeros((self.batch_size, self.seq_length, self.vocabulary))
+        while True:
+            for i in range(self.batch_size):
+                if self.current_idx + self.seq_length >= len(self.data):
+                    # reset the index back to the start of the data set
+                    self.current_idx = 0
+                x[i, :] = self.data[self.current_idx:self.current_idx + self.seq_length]
+                temp_y = self.data[self.current_idx + 1:self.current_idx + self.seq_length + 1]
+                # convert all of temp_y into a one hot representation
+                y[i, :, :] = to_categorical(temp_y, num_classes=self.vocabulary)
+                self.current_idx += self.skip_step
+            print('X: {}, Y: {}'.format(x, y))
+            yield x, y
+
 def keras_data():
     data_path = './dataset/PTB_data'
     # get the data paths
@@ -305,7 +312,7 @@ def keras_data():
     reversed_dictionary = dict(zip(word_to_id.values(), word_to_id.keys()))
 
     print(train_data[:5])
-    print(word_to_id)
+    # print(word_to_id)
     print(vocabulary)
     print(" ".join([reversed_dictionary[x] for x in train_data[:10]]))
     return train_data, valid_data, test_data, vocabulary, reversed_dictionary
@@ -331,7 +338,7 @@ def file_to_word_ids(filename, word_to_id):
     data = read_words(filename)
     return [word_to_id[word] for word in data if word in word_to_id]
 
-
+## --------------- Pytorch data processing --------------
 class Dictionary(object):
     def __init__(self):
         self.word2idx = {}
