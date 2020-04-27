@@ -4,7 +4,7 @@ import pandas as pd
 import math
 import sys
 sys.path.append("D:\Github\Machine-Learning-Basic-Codes")
-sys.path.append("D:/Github/Machine-Learning-Basic-Codes/7Decision_Trees")
+sys.path.append("D:/Github/Machine-Learning-Basic-Codes/07Decision_Trees")
 
 from sklearn.preprocessing import StandardScaler
 from sklearn.model_selection import train_test_split
