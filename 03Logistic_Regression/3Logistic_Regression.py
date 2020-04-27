@@ -41,7 +41,7 @@ class Skylark_LogisticRegression():
             h_x = X.dot(self.init_theta)
             y_pred = sigmoid(h_x)
             theta_grad = X.T.dot(y_pred - y)
-            self.init_theta = self.init_theta - self.learning_rate * theta_grad
+            self.init_theta -= self.learning_rate * theta_grad
         self.final_theta = self.init_theta
 
     def predict(self, X):
