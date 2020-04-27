@@ -193,10 +193,7 @@ l(t) & \text { if } t=\tau
          - $f_{t+1}=\sigma\left(W_{f} h_{t}+U_{f} x_{t+1}+b_{f}\right)$
          - $i_{t+1}=\sigma\left(W_{i} h_{t}+U_{i} x_{t+1}+b_{i}\right)$
          - $g_{t+1}=\tanh \left(W_{g} h_{t}+U_{g} x_{t+1}+b_{g}\right)$
-
-
       那么 $\delta_{h}^{(t)}$ 的计算就分为以下四部分：
-
       $$\begin{aligned}\frac{\partial h_{t+1}}{\partial h_t}&= \left[o_{t+1} \odot\left(1-o_{t+1}\right) \odot \tanh \left(C_{t+1}\right)\right] W_{o} \\&\quad+ \left[\Delta C \odot f_{t+1} \odot\left(1-f_{t+1}\right) \odot C_{t}\right] W_{f} \\&\quad+ \left\{\Delta C \odot i_{t+1} \odot\left[1-\left(a_{t+1}\right)^{2}\right]\right\} W_{a} \\&\quad+ \left[\Delta C \odot a_{t+1} \odot i_{t+1} \odot\left(1-i_{t+1}\right)\right] W_{i}\end{aligned}$$
       其中：
       $$\Delta C=o_{t+1} \odot\left[1-\tanh ^{2}\left(C_{t+1}\right)\right]$$

@@ -29,7 +29,7 @@ X^TX\theta=X^TY\\
 
 推导见 [用正规方程法求解线性回归](https://zhuanlan.zhihu.com/p/34842727)
 
-```
+```python
 # 使用正规方程法
 X = np.matrix(X)
 y = np.matrix(y)
@@ -50,7 +50,7 @@ self.final_theta = X_T_X_I_X_T_X_T_y
    $$\theta_{i}=\theta_{i}-\alpha \frac{\partial}{\partial \theta} J(\theta)$$
 5. 重复以上步骤，直至达到预定精度
 
-![](https://dingyue.ws.126.net/oW096qlMP4GlWxR9TRCXCbEdANt0MPz3cZQfg5AuA3ePP1560695482813.gif)
+![](D:\Download\oW096qlMP4GlWxR9TRCXCbEdANt0MPz3cZQfg5AuA3ePP1560695482813.gif)
 
 ```
 def gradient(self, theta, X, y):

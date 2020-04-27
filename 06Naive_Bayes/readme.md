@@ -44,7 +44,20 @@ Problem occurs: 之前求一个$P(B: 做好事)$还好估计，现在特征这�
 剩下的就和上一节一样了，具体的计算过程详见：[带你理解朴素贝叶斯分类算法](https://zhuanlan.zhihu.com/p/26262151)
 
 
-
+```
+def fit(self, X_train, Y_train):
+   self.X = X_train
+   self.y = Y_train
+   self.classes = np.unique(Y_train) # 从label中找出不同的类别
+   self.parameters = {}
+   for i, c in enumerate(self.classes):
+      # 计算每个种类的平均值，方差，先验概率
+      X_Index_c = self.X[np.where(Y_train == c)]
+      X_index_c_mean = np.mean(X_Index_c, axis=0, keepdims=True)
+      X_index_c_var = np.var(X_Index_c, axis=0, keepdims=True)
+      parameters = {"mean": X_index_c_mean, "var": X_index_c_var, "prior": X_Index_c.shape[0] / self.X.shape[0]}
+      self.parameters["class" + str(c)] = parameters
+```
 
 ## Reference
 1. [一文详解朴素贝叶斯(Naive Bayes)原理](https://zhuanlan.zhihu.com/p/37575364)
