@@ -64,7 +64,7 @@ class Skylark_Xgboost_Clf():
         self.min_impurity = min_impurity  # Minimum variance reduction to continue
         self.max_depth = max_depth  # Maximum depth for tree
 
-        # self.bar = progressbar.ProgressBar(widgets=bar_widgets)
+        self.bar = progressbar.ProgressBar(widgets=bar_widgets)
 
         # Log loss for classification
         self.loss = LeastSquaresLoss()
@@ -81,11 +81,11 @@ class Skylark_Xgboost_Clf():
             self.trees.append(tree)
 
     def fit(self, X_train, Y_train):
-        # y = to_categorical(y)
+        Y_train = to_categorical(Y_train)
         m = X_train.shape[0]
         Y_train = np.reshape(Y_train, (m, -1))
         y_pred = np.zeros(np.shape(Y_train))
-        for i in range(self.n_estimators):
+        for i in self.bar(range(self.n_estimators)):
             tree = self.trees[i]
             y_and_pred = np.concatenate((Y_train, y_pred), axis=1)
             tree.fit(X_train, y_and_pred)
