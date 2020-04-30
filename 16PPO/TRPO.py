@@ -8,6 +8,8 @@ from collections import namedtuple
 import gym
 import numpy as np
 import scipy
+import sys
+sys.path.append("/home/skylark/Github/Machine-Learning-Basic-Codes")
 
 from utils.tool_func import *
 
