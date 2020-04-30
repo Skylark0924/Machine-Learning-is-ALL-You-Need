@@ -350,7 +350,9 @@ $$\eta(\hat{\pi})=\eta(\pi)+\sum_{s} \rho_{\hat{\pi}}(s) \sum_{a} \hat{\pi}(a | 
 > Q: 为什么觉得TRPO的叙述方式反了？私以为应该是在约束新旧策略的散度的前提下，找到使替代回报函数$L_\pi(\hat{\pi})$ 最大的 $\theta$ -> 转化为约束优化问题，这样就自然多了嘛。所以那一步惩罚因子的作用很让人迷惑，**烦请大佬们在评论区解惑**。
 
 ### Implement
+```
 
+```
 
 
 ### Reference 
@@ -358,12 +360,15 @@ $$\eta(\hat{\pi})=\eta(\pi)+\sum_{s} \rho_{\hat{\pi}}(s) \sum_{a} \hat{\pi}(a | 
 2. [TRPO - OpenAI SpinningUp](https://spinningup.openai.com/en/latest/algorithms/trpo.html)
 3. [TRPO与PPO](https://zhuanlan.zhihu.com/p/58765380)
 4. [强化学习进阶 第七讲 TRPO](https://zhuanlan.zhihu.com/p/26308073)
+5. [TRPO pytorch实现](https://github.com/ikostrikov/pytorch-trpo)
+
 
 ## PPO (Proximal Policy Optimization)
+> - on-policy 
+> - either discrete or continuous action spaces
 
 ### Theory
-
-**The central idea of Proximal Policy Optimization is to avoid having too large policy update.** To do that, we use a ratio that will tells us the difference between our new and old policy and clip this ratio from 0.8 to 1.2. Doing that will ensure **that our policy update will not be too large.**
+Same as the TRPO, **the central idea of Proximal Policy Optimization is to avoid having too large policy update.** To do that, we use a ratio that will tells us the difference between our new and old policy and clip this ratio from 0.8 to 1.2. Doing that will ensure **that our policy update will not be too large.**
 
 The problem comes from the step size of gradient ascent:
 
@@ -372,9 +377,39 @@ The problem comes from the step size of gradient ascent:
 
 The idea is that PPO improves the stability of the Actor training by limiting the policy update at each training step.
 
+#### PPO-Penalty (PPO1)
+把TRPO的约束转化为目标函数的罚项，并且能够自动地调整惩罚系数。
+
+> 这么说 TRPO 那步惩罚因子是半成品，TRPO的完整版应该就是PPO1了。
+
+$$L^{KLPEN}(\theta)=\hat{\mathbb{E}}_{t}\left[\frac{\pi_{\theta}\left(a_{t} | s_{t}\right)}{\pi_{\theta_{\text {old }}}\left(a_{t} | s_{t}\right)} \hat{A}_{t}-\beta \operatorname{KL}\left[\pi_{\theta_{\text {old }}}\left(\cdot | s_{t}\right), \pi_{\theta}\left(\cdot | s_{t}\right)\right]\right]$$
+
+```
+self.beta = tf.placeholder(tf.float32, None, 'lambda')
+kl = tf.distributions.kl_divergence(old_nd, nd)
+self.kl_mean = tf.reduce_mean(kl)
+self.aloss = -(tf.reduce_mean(surr - self.beta * kl))
+```
+
+**Keypoint**：$\beta$参数跟随训练进程自调整：
+
+![](../img/Reinforcement%20Learning%20Notes.assets/5164048-d2bcce6eabd68855.webp)
+
+
+```
+if kl < self.kl_target / 1.5:
+    self.lam /= 2
+elif kl > self.kl_target * 1.5:
+    self.lam *= 2
+```
+
+
+#### PPO-Clip (PPO2)
+依靠对目标函数的专门裁剪来消除新策略远离旧策略的动机，代替KL散度。
+
 To be able to do that PPO introduced a new objective function called “**Clipped surrogate objective function**” that **will constraint the policy change in a small range using a clip.**
 
-Instead of using log pi to trace the impact of the actions, we can use **the ratio between the probability of action under current policy divided by the probability of the action under previous policy.**
+Instead of using $log\pi$ to trace the impact of the actions, we can use **the ratio between the probability of action under current policy divided by the probability of the action under previous policy.**
 $$
 r_t(\theta)=\dfrac{\pi_\theta(a_t|s_t)}{\pi_{\theta_{old}}(a_t|s_t)}, \text{so } r(\theta_{old})=1
 $$
@@ -398,6 +433,13 @@ To do that we have two solutions:
 The final Clipped Surrogate(代理) Objective Loss:
 
 ![image-20191205190844049](../img/Reinforcement%20Learning%20Notes.assets/image-20191205190844049.png)
+
+### Implement
+```
+# PPO2
+
+```
+
 
 ### Feature
 **Advantage**
