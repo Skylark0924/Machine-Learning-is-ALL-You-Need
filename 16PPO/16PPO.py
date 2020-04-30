@@ -114,5 +114,5 @@ if __name__ == "__main__":
             }
         )
     else:
-        dqn_agent = Skylark_PPO(env)
-        dqn_agent.train(num_episodes)
+        ppo_agent = Skylark_PPO(env)
+        ppo_agent.train(num_episodes)

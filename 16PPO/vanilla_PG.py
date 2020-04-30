@@ -36,6 +36,7 @@ class Skylark_VPG():
         model.add(Dense(64, activation='relu', kernel_initializer='he_uniform'))
         model.add(Dense(32, activation='relu', kernel_initializer='he_uniform'))
         # softmax策略使用描述状态和行为的特征ϕ(s,a) 与参数\theta的线性组合来权衡一个行为发生的概率
+        # 输出为每个动作的概率
         model.add(Dense(self.act_space, activation='softmax'))
         opt = Adam(lr=self.alpha)
         model.compile(loss='categorical_crossentropy', optimizer=opt)
@@ -46,17 +47,21 @@ class Skylark_VPG():
         act_prob = self.model.predict(state).flatten()
         prob = act_prob / np.sum(act_prob)
         self.act_probs.append(act_prob)
+        # 按概率选取动作
         action = np.random.choice(self.act_space, 1, p=prob)[0]
         return action, prob
         
     def store_trajectory(self, s, a, r, prob):
         y = np.zeros([self.act_space])
-        y[a] = 1 # 制作离散动作空间，执行置1
+        y[a] = 1 # 制作离散动作空间，执行了的置1
         self.gradients.append(np.array(y).astype('float32')-prob)
         self.states.append(s)
         self.rewards.append(r)
 
     def discount_rewards(self, rewards):
+        '''
+        从回合结束位置向前修正reward
+        '''
         discounted_rewards = np.zeros_like(rewards)
         running_add = 0
         for t in reversed(range(0, rewards.size)):
@@ -70,6 +75,7 @@ class Skylark_VPG():
         gradients = np.vstack(self.gradients)
         rewards = np.vstack(self.rewards)
         rewards = self.discount_rewards(rewards)
+        # reward归一化
         rewards = (rewards - np.mean(rewards)) / (np.std(rewards) + 1e-7)
         gradients *= rewards
         X = np.squeeze(np.vstack([self.states]))
