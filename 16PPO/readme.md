@@ -341,17 +341,286 @@ $$\eta(\hat{\pi})=\eta(\pi)+\sum_{s} \rho_{\hat{\pi}}(s) \sum_{a} \hat{\pi}(a | 
 
     $$\max _{\hat{\theta}}\left[L_{\theta_{o l d}}-C D_{K L}^{\max }\left(\theta_{o l d}, \hat{\theta}\right)\right]$$
 
-    在TRPO原文中写作了约束优化问题：
+    由于在实际中，C的限制会导致步长过小。因此，在TRPO原文中写作了约束优化问题：
 
     $$\max _{\theta} E_{s \sim \rho_{\theta_{o l d}}, a \sim \pi_{o_{o l d}}}\left[\frac{\tilde{\pi}_{\theta}\left(a | s_{n}\right)}{\pi_{\theta_{o l d}}\left(a | s_{n}\right)} A_{\theta_{o l d}}\left(s_{n}, a\right)\right] \\ s.t. \quad  D_{K L}^{\max }\left(\theta_{o l d} || \theta\right) \leq \delta$$
-3. 利用平均KL散度代替最大KL散度
+3. 利用平均KL散度代替最大KL散度，最大KL不利于数值数值优化。
 4. 对约束问题二次近似，非约束问题一次近似，这是凸优化的一种常见改法。最后TRPO利用共轭梯度的方法进行最终的优化。
 
 > Q: 为什么觉得TRPO的叙述方式反了？私以为应该是在约束新旧策略的散度的前提下，找到使替代回报函数$L_\pi(\hat{\pi})$ 最大的 $\theta$ -> 转化为约束优化问题，这样就自然多了嘛。所以那一步惩罚因子的作用很让人迷惑，**烦请大佬们在评论区解惑**。
 
 ### Implement
 ```
+class Policy_Network(nn.Module):
+    def __init__(self, obs_space, act_space):
+        super(Policy_Network, self).__init__()
+        self.affine1 = nn.Linear(obs_space, 64)
+        self.affine2 = nn.Linear(64, 64)
 
+        self.action_mean = nn.Linear(64, act_space)
+        self.action_mean.weight.data.mul_(0.1)
+        self.action_mean.bias.data.mul_(0.0)
+
+        self.action_log_std = nn.Parameter(torch.zeros(1, act_space))
+
+        self.saved_actions = []
+        self.rewards = []
+        self.final_value = 0
+
+    def forward(self, x):
+        x = torch.tanh(self.affine1(x))
+        x = torch.tanh(self.affine2(x))
+
+        action_mean = self.action_mean(x)
+        action_log_std = self.action_log_std.expand_as(action_mean)
+        action_std = torch.exp(action_log_std)
+
+        return action_mean, action_log_std, action_std
+
+class Value_Network(nn.Module):
+    def __init__(self, obs_space):
+        super(Value_Network, self).__init__()
+        self.affine1 = nn.Linear(obs_space, 64)
+        self.affine2 = nn.Linear(64, 64)
+        self.value_head = nn.Linear(64, 1)
+        self.value_head.weight.data.mul_(0.1)
+        self.value_head.bias.data.mul_(0.0)
+
+    def forward(self, x):
+        x = torch.tanh(self.affine1(x))
+        x = torch.tanh(self.affine2(x))
+
+        state_values = self.value_head(x)
+        return state_values
+
+Transition = namedtuple('Transition', ('state', 'action', 'mask',
+                                       'reward', 'next_state'))
+class Memory(object):
+    def __init__(self):
+        self.memory = []
+
+    def push(self, *args):
+        """Saves a transition."""
+        self.memory.append(Transition(*args))
+
+    def sample(self):
+        return Transition(*zip(*self.memory))
+
+    def __len__(self):
+        return len(self.memory)
+
+class Skylark_TRPO():
+    def __init__(self, env, alpha = 0.1, gamma = 0.6, 
+                    tau = 0.97, max_kl = 1e-2, l2reg = 1e-3, damping = 1e-1):
+        self.obs_space = 80*80
+        self.act_space = env.action_space.n
+        self.policy = Policy_Network(self.obs_space, self.act_space)
+        self.value = Value_Network(self.obs_space)
+        self.env = env
+        self.alpha = alpha      # learning rate
+        self.gamma = gamma      # discount rate
+        self.tau = tau          # 
+        self.max_kl = max_kl
+        self.l2reg = l2reg
+        self.damping = damping
+
+        self.replay_buffer = Memory()
+        self.buffer_size = 1000
+        self.total_step = 0
+        
+
+    def choose_action(self, state):
+        state = torch.unsqueeze(torch.FloatTensor(state), 0)
+        action_mean, _, action_std = self.policy(Variable(state))
+        action = torch.normal(action_mean, action_std)   
+        return action
+
+    def conjugate_gradients(self, Avp, b, nsteps, residual_tol=1e-10):
+        x = torch.zeros(b.size())
+        r = b.clone()
+        p = b.clone()
+        rdotr = torch.dot(r, r)
+        for i in range(nsteps):
+            _Avp = Avp(p)
+            alpha = rdotr / torch.dot(p, _Avp)
+            x += alpha * p
+            r -= alpha * _Avp
+            new_rdotr = torch.dot(r, r)
+            betta = new_rdotr / rdotr
+            p = r + betta * p
+            rdotr = new_rdotr
+            if rdotr < residual_tol:
+                break
+        return x
+
+
+    def linesearch(self, model,
+                f,
+                x,
+                fullstep,
+                expected_improve_rate,
+                max_backtracks=10,
+                accept_ratio=.1):
+        fval = f(True).data
+        print("fval before", fval.item())
+        for (_n_backtracks, stepfrac) in enumerate(.5**np.arange(max_backtracks)):
+            xnew = x + stepfrac * fullstep
+            set_flat_params_to(model, xnew)
+            newfval = f(True).data
+            actual_improve = fval - newfval
+            expected_improve = expected_improve_rate * stepfrac
+            ratio = actual_improve / expected_improve
+            print("a/e/r", actual_improve.item(), expected_improve.item(), ratio.item())
+
+            if ratio.item() > accept_ratio and actual_improve.item() > 0:
+                print("fval after", newfval.item())
+                return True, xnew
+        return False, x
+
+    def trpo_step(self, model, get_loss, get_kl, max_kl, damping):
+        loss = get_loss()
+        grads = torch.autograd.grad(loss, model.parameters())
+        loss_grad = torch.cat([grad.view(-1) for grad in grads]).data
+
+        def Fvp(v):
+            kl = get_kl()
+            kl = kl.mean() # 平均散度
+
+            grads = torch.autograd.grad(kl, model.parameters(), create_graph=True)
+            flat_grad_kl = torch.cat([grad.view(-1) for grad in grads])
+
+            kl_v = (flat_grad_kl * Variable(v)).sum()
+            grads = torch.autograd.grad(kl_v, model.parameters())
+            flat_grad_grad_kl = torch.cat([grad.contiguous().view(-1) for grad in grads]).data
+
+            return flat_grad_grad_kl + v * damping
+
+        stepdir = self.conjugate_gradients(Fvp, -loss_grad, 10)
+
+        shs = 0.5 * (stepdir * Fvp(stepdir)).sum(0, keepdim=True)
+
+        lm = torch.sqrt(shs / max_kl)
+        fullstep = stepdir / lm[0]
+
+        neggdotstepdir = (-loss_grad * stepdir).sum(0, keepdim=True)
+        print(("lagrange multiplier:", lm[0], "grad_norm:", loss_grad.norm()))
+
+        prev_params = get_flat_params_from(model)
+        success, new_params = self.linesearch(model, get_loss, prev_params, fullstep,
+                                        neggdotstepdir / lm[0])
+        set_flat_params_to(model, new_params)
+        return loss
+
+    def learn(self, batch_size=128):
+        batch = self.replay_buffer.sample()
+        rewards = torch.Tensor(batch.reward)
+        masks = torch.Tensor(batch.mask)
+        actions = torch.Tensor(np.concatenate(batch.action, 0))
+        states = torch.Tensor(batch.state)
+        values = self.value(Variable(states))
+
+        returns = torch.Tensor(actions.size(0),1)
+        deltas = torch.Tensor(actions.size(0),1)
+        advantages = torch.Tensor(actions.size(0),1)
+
+        prev_return = 0
+        prev_value = 0
+        prev_advantage = 0
+
+        for i in reversed(range(rewards.size(0))):
+            returns[i] = rewards[i] + self.gamma * prev_return * masks[i] # 计算了折扣累计回报
+            deltas[i] = rewards[i] + self.gamma * prev_value * masks[i] - values.data[i] # V - Q state value的偏差
+            advantages[i] = deltas[i] + self.gamma * self.tau * prev_advantage * masks[i] # 优势函数 A
+
+            prev_return = returns[i, 0]
+            prev_value = values.data[i, 0]
+            prev_advantage = advantages[i, 0]
+
+        targets = Variable(returns)
+
+        # Original code uses the same LBFGS to optimize the value loss
+        def get_value_loss(flat_params):
+            '''
+            构建替代回报函数 L_\pi(\hat{\pi})
+            '''
+            set_flat_params_to(self.value, torch.Tensor(flat_params))
+            for param in self.value.parameters():
+                if param.grad is not None:
+                    param.grad.data.fill_(0)
+
+            values_ = self.value(Variable(states))
+
+            value_loss = (values_ - targets).pow(2).mean() # (f(s)-r)^2
+
+            # weight decay
+            for param in  self.value.parameters():
+                value_loss += param.pow(2).sum() * self.l2reg # 参数正则项
+            value_loss.backward()
+            return (value_loss.data.double().numpy(), get_flat_grad_from(self.value).data.double().numpy())
+
+        # 使用 scipy 的 l_bfgs_b 算法来优化无约束问题
+        flat_params, _, opt_info = optimize.fmin_l_bfgs_b(func=get_value_loss, x0=get_flat_params_from(self.value).double().numpy(), maxiter=25)
+        set_flat_params_to(self.value, torch.Tensor(flat_params))
+
+        # 归一化优势函数
+        advantages = (advantages - advantages.mean()) / advantages.std()
+
+        action_means, action_log_stds, action_stds =  self.policy(Variable(states))
+        fixed_log_prob = normal_log_density(Variable(actions), action_means, action_log_stds, action_stds).data.clone()
+
+        def get_loss(volatile=False):
+            '''
+            计算策略网络的loss
+            '''
+            if volatile:
+                with torch.no_grad():
+                    action_means, action_log_stds, action_stds = self.policy(Variable(states))
+            else:
+                action_means, action_log_stds, action_stds = self.policy(Variable(states))
+                    
+            log_prob = normal_log_density(Variable(actions), action_means, action_log_stds, action_stds)
+            # -A * e^{\hat{\pi}/\pi_{old}}
+            action_loss = -Variable(advantages) * torch.exp(log_prob - Variable(fixed_log_prob))
+            return action_loss.mean()
+
+
+        def get_kl():
+            mean1, log_std1, std1 = self.policy(Variable(states))
+
+            mean0 = Variable(mean1.data)
+            log_std0 = Variable(log_std1.data)
+            std0 = Variable(std1.data)
+            kl = log_std1 - log_std0 + (std0.pow(2) + (mean0 - mean1).pow(2)) / (2.0 * std1.pow(2)) - 0.5
+            return kl.sum(1, keepdim=True)
+
+        self.trpo_step(self.policy, get_loss, get_kl, self.max_kl, self.damping)
+
+
+    def train(self, num_episodes, batch_size = 128, num_steps = 100):
+        for i in range(num_episodes):
+            state = self.env.reset()
+
+            steps, reward, sum_rew = 0, 0, 0
+            done = False
+            while not done and steps < num_steps:
+                state = preprocess(state)
+                action = self.choose_action(state)
+                action = action.data[0].numpy()
+                action_ = np.argmax(action)
+                # Interaction with Env
+                next_state, reward, done, info = self.env.step(action_) 
+                next_state_ = preprocess(next_state)
+                mask = 0 if done else 1
+                self.replay_buffer.push(state, np.array([action]), mask, reward, next_state_)
+                if len(self.replay_buffer) > self.buffer_size:
+                    self.learn(batch_size)
+
+                sum_rew += reward
+                state = next_state
+                steps += 1
+                self.total_step += 1
+            print('Episode: {} | Avg_reward: {} | Length: {}'.format(i, sum_rew/steps, steps))
+        print("Training finished.")
 ```
 
 
@@ -436,8 +705,226 @@ The final Clipped Surrogate(代理) Objective Loss:
 
 ### Implement
 ```
-# PPO2
+# PPO1 + PPO2 连续动作空间
+class Skylark_PPO():
+    def __init__(self, env, gamma = 0.9, epsilon = 0.1, kl_target = 0.01, t='ppo2'):
+        self.t = t
+        self.log = 'model/{}_log'.format(t)
 
+        self.env = env
+        self.bound = self.env.action_space.high[0]
+
+        self.gamma = gamma
+        self.A_LR = 0.0001
+        self.C_LR = 0.0002
+        self.A_UPDATE_STEPS = 10
+        self.C_UPDATE_STEPS = 10
+
+        # KL penalty, d_target、β for ppo1
+        self.kl_target = kl_target
+        self.beta = 0.5
+        # ε for ppo2
+        self.epsilon = epsilon
+
+        self.sess = tf.Session()
+        self.build_model()
+
+    def _build_critic(self):
+        """critic model.
+        """
+        with tf.variable_scope('critic'):
+            x = tf.layers.dense(self.states, 100, tf.nn.relu)
+
+            self.v = tf.layers.dense(x, 1)
+            self.advantage = self.dr - self.v
+
+    def _build_actor(self, name, trainable):
+        """actor model.
+        """
+        with tf.variable_scope(name):
+            x = tf.layers.dense(self.states, 100, tf.nn.relu, trainable=trainable)
+
+            mu = self.bound * tf.layers.dense(x, 1, tf.nn.tanh, trainable=trainable)
+            sigma = tf.layers.dense(x, 1, tf.nn.softplus, trainable=trainable)
+
+            norm_dist = tf.distributions.Normal(loc=mu, scale=sigma)
+
+        params = tf.get_collection(tf.GraphKeys.GLOBAL_VARIABLES, scope=name)
+
+        return norm_dist, params
+
+    def build_model(self):
+        """build model with ppo loss.
+        """
+        # inputs
+        self.states = tf.placeholder(tf.float32, [None, 3], 'states')
+        self.action = tf.placeholder(tf.float32, [None, 1], 'action')
+        self.adv = tf.placeholder(tf.float32, [None, 1], 'advantage')
+        self.dr = tf.placeholder(tf.float32, [None, 1], 'discounted_r')
+
+        # build model
+        self._build_critic()
+        nd, pi_params = self._build_actor('actor', trainable=True)
+        old_nd, oldpi_params = self._build_actor('old_actor', trainable=False)
+
+        # define ppo loss
+        with tf.variable_scope('loss'):
+            # critic loss
+            self.closs = tf.reduce_mean(tf.square(self.advantage))
+
+            # actor loss
+            with tf.variable_scope('surrogate'):
+                ratio = tf.exp(nd.log_prob(self.action) - old_nd.log_prob(self.action))
+                surr = ratio * self.adv
+
+            if self.t == 'ppo1':
+                self.tflam = tf.placeholder(tf.float32, None, 'lambda')
+                kl = tf.distributions.kl_divergence(old_nd, nd)
+                self.kl_mean = tf.reduce_mean(kl)
+                self.aloss = -(tf.reduce_mean(surr - self.tflam * kl))
+            else: 
+                self.aloss = -tf.reduce_mean(tf.minimum(
+                    surr,
+                    tf.clip_by_value(ratio, 1.- self.epsilon, 1.+ self.epsilon) * self.adv))
+
+        # define Optimizer
+        with tf.variable_scope('optimize'):
+            self.ctrain_op = tf.train.AdamOptimizer(self.C_LR).minimize(self.closs)
+            self.atrain_op = tf.train.AdamOptimizer(self.A_LR).minimize(self.aloss)
+
+        with tf.variable_scope('sample_action'):
+            self.sample_op = tf.squeeze(nd.sample(1), axis=0)
+
+        # update old actor
+        with tf.variable_scope('update_old_actor'):
+            self.update_old_actor = [oldp.assign(p) for p, oldp in zip(pi_params, oldpi_params)]
+
+        tf.summary.FileWriter(self.log, self.sess.graph)
+
+        self.sess.run(tf.global_variables_initializer())
+
+    def choose_action(self, state):
+        """choice continuous action from normal distributions.
+
+        Arguments:
+            state: state.
+
+        Returns:
+           action.
+        """
+        state = state[np.newaxis, :]
+        action = self.sess.run(self.sample_op, {self.states: state})[0]
+        return np.clip(action, -self.bound, self.bound)
+
+    def get_value(self, state):
+        """get q value.
+
+        Arguments:
+            state: state.
+
+        Returns:
+           q_value.
+        """
+        if state.ndim < 2: state = state[np.newaxis, :]
+
+        return self.sess.run(self.v, {self.states: state})
+
+    def discount_reward(self, states, rewards, next_observation):
+        """Compute target value.
+
+        Arguments:
+            states: state in episode.
+            rewards: reward in episode.
+            next_observation: state of last action.
+
+        Returns:
+            targets: q targets.
+        """
+        s = np.vstack([states, next_observation.reshape(-1, 3)])
+        q_values = self.get_value(s).flatten()
+
+        targets = rewards + self.gamma * q_values[1:]
+        targets = targets.reshape(-1, 1)
+
+        return targets
+
+    def learn(self, states, action, dr):
+        """update model.
+
+        Arguments:
+            states: states.
+            action: action of states.
+            dr: discount reward of action.
+        """
+        self.sess.run(self.update_old_actor)
+
+        adv = self.sess.run(self.advantage,
+                            {self.states: states,
+                             self.dr: dr})
+
+        # update actor
+        if self.t == 'ppo1':
+            # run ppo1 loss
+            for _ in range(self.A_UPDATE_STEPS):
+                _, kl = self.sess.run(
+                    [self.atrain_op, self.kl_mean],
+                    {self.states: states,
+                     self.action: action,
+                     self.adv: adv,
+                     self.tflam: self.beta})
+
+            if kl < self.kl_target / 1.5:
+                self.beta /= 2
+            elif kl > self.kl_target * 1.5:
+                self.beta *= 2
+        else:
+            # run ppo2 loss
+            for _ in range(self.A_UPDATE_STEPS):
+                self.sess.run(self.atrain_op,
+                              {self.states: states,
+                               self.action: action,
+                               self.adv: adv})
+
+        # update critic
+        for _ in range(self.C_UPDATE_STEPS):
+            self.sess.run(self.ctrain_op,
+                          {self.states: states,
+                           self.dr: dr})
+
+    def train(self, num_episodes, batch_size=32, num_steps = 1000):
+        tf.reset_default_graph()
+
+        for i in range(num_episodes):
+            state = self.env.reset()
+
+            states, actions, rewards = [], [], []
+            steps, sum_rew = 0, 0
+            done = False
+
+            while not done and steps < num_steps:
+                action = self.choose_action(state)
+                next_state, reward, done, _ = self.env.step(action)
+                states.append(state)
+                actions.append(action)
+
+                sum_rew += reward
+                rewards.append((reward + 8) / 8)
+
+                state = next_state
+                steps += 1
+
+                if steps % batch_size == 0:
+                    states = np.array(states)
+                    actions = np.array(actions)
+                    rewards = np.array(rewards)
+                    d_reward = self.discount_reward(states, rewards, next_state)
+
+                    self.learn(states, actions, d_reward)
+
+                    states, actions, rewards = [], [], []
+
+            print('Episode: {} | Avg_reward: {} | Length: {}'.format(i, sum_rew/steps, steps))
+        print("Training finished.")
 ```
 
 

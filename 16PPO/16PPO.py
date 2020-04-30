@@ -2,25 +2,29 @@ import gym
 import numpy as np
 import pandas as pd
 import tensorflow as tf
+tf.compat.v1.logging.set_verbosity(tf.compat.v1.logging.ERROR) # 隐藏warning
+
+'''
+连续动作空间
+'''
 
 class Skylark_PPO():
-    def __init__(self, env, ep = 1000, epsilon = 0.1, t='ppo2'):
+    def __init__(self, env, gamma = 0.9, epsilon = 0.1, kl_target = 0.01, t='ppo2'):
         self.t = t
-        self.ep = ep
         self.log = 'model/{}_log'.format(t)
 
         self.env = env
         self.bound = self.env.action_space.high[0]
 
-        self.gamma = 0.9
+        self.gamma = gamma
         self.A_LR = 0.0001
         self.C_LR = 0.0002
         self.A_UPDATE_STEPS = 10
         self.C_UPDATE_STEPS = 10
 
         # KL penalty, d_target、β for ppo1
-        self.kl_target = 0.01
-        self.lam = 0.5
+        self.kl_target = kl_target
+        self.beta = 0.5
         # ε for ppo2
         self.epsilon = epsilon
 
@@ -112,7 +116,6 @@ class Skylark_PPO():
         """
         state = state[np.newaxis, :]
         action = self.sess.run(self.sample_op, {self.states: state})[0]
-
         return np.clip(action, -self.bound, self.bound)
 
     def get_value(self, state):
@@ -147,14 +150,6 @@ class Skylark_PPO():
 
         return targets
 
-# not work.
-#    def neglogp(self, mean, std, x):
-#        """Gaussian likelihood
-#        """
-#        return 0.5 * tf.reduce_sum(tf.square((x - mean) / std), axis=-1) \
-#               + 0.5 * np.log(2.0 * np.pi) * tf.to_float(tf.shape(x)[-1]) \
-#               + tf.reduce_sum(tf.log(std), axis=-1)
-
     def learn(self, states, action, dr):
         """update model.
 
@@ -178,12 +173,12 @@ class Skylark_PPO():
                     {self.states: states,
                      self.action: action,
                      self.adv: adv,
-                     self.tflam: self.lam})
+                     self.tflam: self.beta})
 
             if kl < self.kl_target / 1.5:
-                self.lam /= 2
+                self.beta /= 2
             elif kl > self.kl_target * 1.5:
-                self.lam *= 2
+                self.beta *= 2
         else:
             # run ppo2 loss
             for _ in range(self.A_UPDATE_STEPS):
@@ -198,56 +193,40 @@ class Skylark_PPO():
                           {self.states: states,
                            self.dr: dr})
 
-    def train(self, batch_size):
-        """train method.
-        """
+    def train(self, num_episodes, batch_size=32, num_steps = 1000):
         tf.reset_default_graph()
 
-        history = {'episode': [], 'Episode_reward': []}
-
-        for i in range(self.ep):
-            observation = self.env.reset()
+        for i in range(num_episodes):
+            state = self.env.reset()
 
             states, actions, rewards = [], [], []
-            episode_reward = 0
-            j = 0
+            steps, sum_rew = 0, 0
+            done = False
 
-            while True:
-                a = self.choose_action(observation)
-                next_observation, reward, done, _ = self.env.step(a)
-                states.append(observation)
-                actions.append(a)
+            while not done and steps < num_steps:
+                action = self.choose_action(state)
+                next_state, reward, done, _ = self.env.step(action)
+                states.append(state)
+                actions.append(action)
 
-                episode_reward += reward
+                sum_rew += reward
                 rewards.append((reward + 8) / 8)
 
-                observation = next_observation
+                state = next_state
+                steps += 1
 
-                if (j + 1) % batch_size == 0:
+                if steps % batch_size == 0:
                     states = np.array(states)
                     actions = np.array(actions)
                     rewards = np.array(rewards)
-                    d_reward = self.discount_reward(states, rewards, next_observation)
+                    d_reward = self.discount_reward(states, rewards, next_state)
 
                     self.learn(states, actions, d_reward)
 
                     states, actions, rewards = [], [], []
 
-                if done:
-                    break
-                j += 1
-
-            history['episode'].append(i)
-            history['Episode_reward'].append(episode_reward)
-            print('Episode: {} | Episode reward: {:.2f}'.format(i, episode_reward))
-
-        return history
-
-    def save_history(self, history, name):
-        name = os.path.join('history', name)
-
-        df = pd.DataFrame.from_dict(history)
-        df.to_csv(name, index=False, encoding='utf-8')
+            print('Episode: {} | Avg_reward: {} | Length: {}'.format(i, sum_rew/steps, steps))
+        print("Training finished.")
 
 if __name__ == "__main__":
     use_ray = False

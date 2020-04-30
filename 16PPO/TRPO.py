@@ -146,7 +146,7 @@ class Skylark_TRPO():
 
         def Fvp(v):
             kl = get_kl()
-            kl = kl.mean()
+            kl = kl.mean() # 平均散度
 
             grads = torch.autograd.grad(kl, model.parameters(), create_graph=True)
             flat_grad_kl = torch.cat([grad.view(-1) for grad in grads])
@@ -171,7 +171,6 @@ class Skylark_TRPO():
         success, new_params = self.linesearch(model, get_loss, prev_params, fullstep,
                                         neggdotstepdir / lm[0])
         set_flat_params_to(model, new_params)
-
         return loss
 
     def learn(self, batch_size=128):
@@ -191,9 +190,9 @@ class Skylark_TRPO():
         prev_advantage = 0
 
         for i in reversed(range(rewards.size(0))):
-            returns[i] = rewards[i] + self.gamma * prev_return * masks[i]
-            deltas[i] = rewards[i] + self.gamma * prev_value * masks[i] - values.data[i]
-            advantages[i] = deltas[i] + self.gamma * self.tau * prev_advantage * masks[i]
+            returns[i] = rewards[i] + self.gamma * prev_return * masks[i] # 计算了折扣累计回报
+            deltas[i] = rewards[i] + self.gamma * prev_value * masks[i] - values.data[i] # V - Q state value的偏差
+            advantages[i] = deltas[i] + self.gamma * self.tau * prev_advantage * masks[i] # 优势函数 A
 
             prev_return = returns[i, 0]
             prev_value = values.data[i, 0]
@@ -203,6 +202,9 @@ class Skylark_TRPO():
 
         # Original code uses the same LBFGS to optimize the value loss
         def get_value_loss(flat_params):
+            '''
+            构建替代回报函数 L_\pi(\hat{\pi})
+            '''
             set_flat_params_to(self.value, torch.Tensor(flat_params))
             for param in self.value.parameters():
                 if param.grad is not None:
@@ -210,23 +212,28 @@ class Skylark_TRPO():
 
             values_ = self.value(Variable(states))
 
-            value_loss = (values_ - targets).pow(2).mean()
+            value_loss = (values_ - targets).pow(2).mean() # (f(s)-r)^2
 
             # weight decay
             for param in  self.value.parameters():
-                value_loss += param.pow(2).sum() * self.l2reg
+                value_loss += param.pow(2).sum() * self.l2reg # 参数正则项
             value_loss.backward()
             return (value_loss.data.double().numpy(), get_flat_grad_from(self.value).data.double().numpy())
 
-        flat_params, _, opt_info = optimize.fmin_l_bfgs_b(get_value_loss, get_flat_params_from(self.value).double().numpy(), maxiter=25)
+        # 使用 scipy 的 l_bfgs_b 算法来优化无约束问题
+        flat_params, _, opt_info = optimize.fmin_l_bfgs_b(func=get_value_loss, x0=get_flat_params_from(self.value).double().numpy(), maxiter=25)
         set_flat_params_to(self.value, torch.Tensor(flat_params))
 
+        # 归一化优势函数
         advantages = (advantages - advantages.mean()) / advantages.std()
 
         action_means, action_log_stds, action_stds =  self.policy(Variable(states))
         fixed_log_prob = normal_log_density(Variable(actions), action_means, action_log_stds, action_stds).data.clone()
 
         def get_loss(volatile=False):
+            '''
+            计算策略网络的loss
+            '''
             if volatile:
                 with torch.no_grad():
                     action_means, action_log_stds, action_stds = self.policy(Variable(states))
@@ -234,6 +241,7 @@ class Skylark_TRPO():
                 action_means, action_log_stds, action_stds = self.policy(Variable(states))
                     
             log_prob = normal_log_density(Variable(actions), action_means, action_log_stds, action_stds)
+            # -A * e^{\hat{\pi}/\pi_{old}}
             action_loss = -Variable(advantages) * torch.exp(log_prob - Variable(fixed_log_prob))
             return action_loss.mean()
 
