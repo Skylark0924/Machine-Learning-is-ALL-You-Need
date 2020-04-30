@@ -87,7 +87,7 @@ class Skylark_VPG():
         for i in range(num_episodes):
             state = self.env.reset()
 
-            steps, penalties, reward, sum_rew = 0, 0, 0, 0
+            steps, reward, sum_rew = 0, 0, 0, 0
             done = False
             while not done:
                 # self.env.render()

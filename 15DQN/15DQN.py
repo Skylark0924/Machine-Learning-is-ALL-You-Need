@@ -74,7 +74,7 @@ class Skylark_DQN():
         for i in range(num_episodes):
             state = self.env.reset()
 
-            steps, penalties, reward, sum_rew = 0, 0, 0, 0
+            steps, reward, sum_rew = 0, 0, 0
             done = False
             while not done and steps < num_steps:
                 action = self.choose_action(state)
@@ -84,9 +84,6 @@ class Skylark_DQN():
                 self.store_trajectory(state, action, reward, next_state)
                 if self.traj_count > self.buffer_size:
                     self.learn(batch_size)
-
-                if reward == -10:
-                    penalties += 1
 
                 sum_rew += reward
                 state = next_state

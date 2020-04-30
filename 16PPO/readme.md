@@ -6,6 +6,9 @@
 做Reinforcement Learning方向的，要明确其目标: **找到可以让agent获得最优回报的最优行为策略 $\pi^*$**，所以对策略直接进行建模并按照梯度提升就是一个很自然的想法了。
 
 ## Vanilla Policy Gradient
+> - on-policy
+> - either discrete or continuous action spaces
+
 Policy gradient输出不是 action 的 value, 而是具体的那一个 action, 这样 policy gradient 就跳过了 value 评估这个阶段, 对策略本身进行评估。
 
 ### Theory
@@ -117,16 +120,23 @@ def learn(self):
 
 ### Pseudocode
 
-REINFORCE: 一种基于整条回合数据的更新, remember that? Monte-Carlo method!
+**REINFORCE**: 一种基于整条回合数据的更新, remember that? Monte-Carlo method!
 
 ![Policy Gradients 算法更新 (./img/5-1-1.png)](https://morvanzhou.github.io/static/results/reinforcement-learning/5-1-1.png)
 
 > 其中，$\nabla log \pi_{\theta}(s_t,a_t)v_t$可以理解为在状态 $s$对所选动作的 $a$ 的吃惊度，$\pi_{\theta}(s_t,a_t)$概率越小，反向的 $log(Policy(s,a))$(即 `-log(P)`) 反而越大. 如果在 `Policy(s,a)` 很小的情况下, 拿到了一个大的 `R`, 也就是大的 `V`, 那 $\nabla log \pi_{\theta}(s_t,a_t)v_t$ 就更大, 表示更吃惊, (**我选了一个不常选的动作, 却发现原来它能得到了一个好的 reward, 那我就得对我这次的参数进行一个大幅修改**). 这就是吃惊度的物理意义.
 
+**VPG** ([OpenAI SpinningUp](https://spinningup.openai.com/en/latest/algorithms/vpg.html#documentation-pytorch-version)的定义)
+
+![](https://spinningup.openai.com/en/latest/_images/math/262538f3077a7be8ce89066abbab523575132996.svg)
+
+可以发现引入了值函数/优势函数，这是后期改进之后的版本，使其可以用于非回合制的环境。
+
+
 ### Implement
 ```
 '''
-用于回合更新的离散控制
+用于回合更新的离散控制 REINFORCE
 '''
 class Skylark_VPG():
     def __init__(self, env, alpha = 0.1, gamma = 0.6, epsilon=0.1, update_freq = 200):
@@ -248,6 +258,10 @@ class Skylark_VPG():
 2. In a situation of Monte Carlo, waiting until the end of episode to calculate the reward.
 
 ## TRPO (Trust Region Policy Optimization)
+> - on-policy
+> - either discrete or continuous action spaces
+
+### Principle
 TRPO译为**信赖域策略优化**，TRPO的出现是要解决VPG存在的问题的：**VPG的更新步长 $\alpha$ 是个固定值，很容易产生从一个不好的策略'提升'到另一个更差的策略上。**
 
 这让我想起了优化中对步长的估计：Armijo-Goldstein准则、Wolfe-Powell准则等。当然和TRPO关系不大。
@@ -256,7 +270,8 @@ TRPO有一个大胆的想法，要**让更新后的策略回报函数单调不�
 
 $$\eta(\hat{\pi})=\eta(\pi)+E_{s_{0}, a_{0}, \cdots \hat{\pi}}\left[\sum_{t=0}^{\infty} \gamma^{t} A_{\pi}\left(s_{t}, a_{t}\right)\right]$$
 
-其中，$A_\pi$为优势函数([这个会在A2C的章节讲到]())
+- $\eta$会被用作代价函数，毕竟在PG的梯度上升中，代价函数和回报函数等价
+- $A_\pi$为优势函数([这个会在A2C的章节讲到]())
 
 $$\begin{aligned}
 A_{\pi}(s, a)&=Q_{\pi}(s, a)-V_{\pi}(s) \\
@@ -265,11 +280,11 @@ A_{\pi}(s, a)&=Q_{\pi}(s, a)-V_{\pi}(s) \\
 
 > **Proof:**  (也可以通过构造法反推)
 > $$\begin{aligned}
-E_{\tau | \tilde{\pi}}\left[\sum_{t=0}^{\infty} \gamma^{t} A_{\pi}\left(s_{t}, a_{t}\right)\right] 
-&=E_{\tau | \tilde{\pi}}\left[\sum_{t=0}^{\infty} \gamma^{t}\left(r(s)+\gamma V^{\pi}\left(s_{t+1}\right)-V^{\pi}\left(s_{t}\right)\right)\right] \\
-&=E_{\tau | \tilde{\pi}}\left[\sum_{t=0}^{\infty} \gamma^{t}\left(r\left(s_{t}\right)\right)+\sum_{t=0}^{\infty} \gamma^{t}\left(\gamma V^{\pi}\left(s_{t+1}\right)-V^{\pi}\left(s_{t}\right)\right)\right] \\
-&=E_{\tau | \tilde{\pi}}\left[\sum_{t=0}^{\infty} \gamma^{t}\left(r\left(s_{t}\right)\right)\right]+E_{s_{0}}\left[-V^{\pi}\left(s_{0}\right)\right] \\
-&=\eta(\tilde{\pi})-\eta(\pi)
+E_{\tau | \hat{\pi}}\left[\sum_{t=0}^{\infty} \gamma^{t} A_{\pi}\left(s_{t}, a_{t}\right)\right] 
+&=E_{\tau | \hat{\pi}}\left[\sum_{t=0}^{\infty} \gamma^{t}\left(r(s)+\gamma V^{\pi}\left(s_{t+1}\right)-V^{\pi}\left(s_{t}\right)\right)\right] \\
+&=E_{\tau | \hat{\pi}}\left[\sum_{t=0}^{\infty} \gamma^{t}\left(r\left(s_{t}\right)\right)+\sum_{t=0}^{\infty} \gamma^{t}\left(\gamma V^{\pi}\left(s_{t+1}\right)-V^{\pi}\left(s_{t}\right)\right)\right] \\
+&=E_{\tau | \hat{\pi}}\left[\sum_{t=0}^{\infty} \gamma^{t}\left(r\left(s_{t}\right)\right)\right]+E_{s_{0}}\left[-V^{\pi}\left(s_{0}\right)\right] \\
+&=\eta(\hat{\pi})-\eta(\pi)
 \end{aligned}$$
 
 
@@ -281,6 +296,68 @@ E_{\tau | \tilde{\pi}}\left[\sum_{t=0}^{\infty} \gamma^{t} A_{\pi}\left(s_{t}, a
 将其分解成state和action的求和：
 
 $$\eta(\hat{\pi})=\eta(\pi)+\sum_{t=0}^{\infty} \sum_{s} P\left(s_{t}=s | \hat{\pi}\right) \sum_{a} \hat{\pi}(a | s) \gamma^{t} A_{\pi}(s, a)$$
+
+- $\sum_{a} \hat{\pi}(a | s) \gamma^{t} A_{\pi}(s, a)$ 是在状态 s 时，计算动作 a 的边际分布
+- $\sum_{s} P\left(s_{t}=s | \hat{\pi}\right)$ 是在时间 t 时，求状态 s 的边际分布
+- $\sum_{t=0}^{\infty} \sum_{s} P\left(s_{t}=s | \hat{\pi}\right)$ 对整个时间序列求和。
+
+定义 
+
+$\rho_{\pi}(s)=P\left(s_{0}=s\right)+\gamma P\left(s_{1}=s\right)+\gamma^{2} P\left(s_{2}=s\right)+\cdots$ 
+
+即有 
+$$\eta(\hat{\pi})=\eta(\pi)+\sum_{s} \rho_{\hat{\pi}}(s) \sum_{a} \hat{\pi}(a | s) A^{\pi}(s, a)$$
+
+这个公式在应用时也无法使用，因为状态 s 是根据新策略的分布产生的，而新策略又是我们要求的，这就导致了含有 $\hat{\pi}$ 的项我们都无从得知。
+
+### Tricks
+1. 一个简单的想法：用旧策略代替上式中的新策略
+2. **重要性采样**来处理动作分布，也是TRPO的关键：
+   $$\sum_{a} \hat{\pi}_{\theta}\left(a | s_{n}\right) A_{\theta_{o l d}}\left(s_{n}, a\right)=E_{a \sim q}\left[\frac{\hat{n}_{\theta}\left(a | s_{n}\right)}{\pi_{\theta_{o l d}}\left(a | s_{n}\right)} A_{\theta_{o l d}}\left(s_{n}, a\right)\right]$$
+    得到 $\hat{\pi}$ 的一阶近似，**替代回报函数 $L_\pi(\hat{\pi})$**
+
+    $$L_{\pi}(\hat{\pi})=\eta(\pi)+E_{s \sim \rho_{\theta_{o l d}}, a \sim \pi_{\theta_{o l d}}}\left[\frac{\hat{\pi}_{\theta}\left(a | s_{n}\right)}{\pi_{\theta_{o l d}}\left(a | s_{n}\right)} A_{\theta_{o l d}}\left(s_{n}, a\right)\right]$$
+
+    ![](https://pic4.zhimg.com/80/v2-f8e72c18f3cb17bcd3c828c71c842d3f_1440w.jpg)
+
+    说完了损失函数的构建，那么步长到底怎么定呢？
+
+    $$\eta(\hat{\pi}) \geq L_{\pi}(\hat{\pi})-C D_{K L}^{\max }(\pi, \hat{\pi})$$
+
+    - 惩罚因子 $C=\frac{2 \epsilon_{V}}{(1-V)^{2}}$
+    - $D_{K L}^{\max }(\pi, \hat{\pi})$ 为每个状态下动作分布的最大值
+
+    得到一个单调递增的策略序列：
+
+    $$M_{i}(\pi)=L_{\pi_{i}}(\tilde{\pi})-C D_{K L}^{\max }\left(\pi_{i}, \tilde{\pi}\right)$$
+
+    可知
+
+    $$\eta\left(\pi_{i+1}\right) \geq M_{i}\left(\pi_{i+1}\right), and \quad \eta\left(\pi_{i}\right)=M_{i}\left(\pi_{i}\right)$$
+
+    $$\eta\left(\pi_{i+1}\right)-\eta\left(\pi_{i}\right) \geq M_{i}\left(\pi_{i+1}\right)-M\left(\pi_{i}\right)$$
+
+    我们只需要在新策略序列中找到一个使 $M_i$ 最大的策略即可，对策略的搜寻就变成了优化问题：
+
+    $$\max _{\hat{\theta}}\left[L_{\theta_{o l d}}-C D_{K L}^{\max }\left(\theta_{o l d}, \hat{\theta}\right)\right]$$
+
+    在TRPO原文中写作了约束优化问题：
+
+    $$\max _{\theta} E_{s \sim \rho_{\theta_{o l d}}, a \sim \pi_{o_{o l d}}}\left[\frac{\tilde{\pi}_{\theta}\left(a | s_{n}\right)}{\pi_{\theta_{o l d}}\left(a | s_{n}\right)} A_{\theta_{o l d}}\left(s_{n}, a\right)\right] \\ s.t. \quad  D_{K L}^{\max }\left(\theta_{o l d} || \theta\right) \leq \delta$$
+3. 利用平均KL散度代替最大KL散度
+4. 对约束问题二次近似，非约束问题一次近似，这是凸优化的一种常见改法。最后TRPO利用共轭梯度的方法进行最终的优化。
+
+> Q: 为什么觉得TRPO的叙述方式反了？私以为应该是在约束新旧策略的散度的前提下，找到使替代回报函数$L_\pi(\hat{\pi})$ 最大的 $\theta$ -> 转化为约束优化问题，这样就自然多了嘛。所以那一步惩罚因子的作用很让人迷惑，**烦请大佬们在评论区解惑**。
+
+### Implement
+
+
+
+### Reference 
+1. [TRPO - Medium](https://medium.com/@jonathan_hui/rl-trust-region-policy-optimization-trpo-explained-a6ee04eeeee9)
+2. [TRPO - OpenAI SpinningUp](https://spinningup.openai.com/en/latest/algorithms/trpo.html)
+3. [TRPO与PPO](https://zhuanlan.zhihu.com/p/58765380)
+4. [强化学习进阶 第七讲 TRPO](https://zhuanlan.zhihu.com/p/26308073)
 
 ## PPO (Proximal Policy Optimization)
 
@@ -337,3 +414,5 @@ on-policy -> data inefficient
 1. [Policy Gradients - 莫烦](https://morvanzhou.github.io/tutorials/machine-learning/reinforcement-learning/5-1-A-PG/)
 2. [Policy Gradient Algorithms - lilianweng's blog](https://lilianweng.github.io/lil-log/2018/04/08/policy-gradient-algorithms.html)👍
 3. [An introduction to Policy Gradients with Cartpole and Doom](https://www.freecodecamp.org/news/an-introduction-to-policy-gradients-with-cartpole-and-doom-495b5ef2207f/)
+4. [OpenAI spinningup](https://spinningup.openai.com/en/latest/algorithms/trpo.html)
+5. [Policy gradient - Berkeley](http://rail.eecs.berkeley.edu/deeprlcourse-fa17/f17docs/lecture_4_policy_gradient.pdf)
