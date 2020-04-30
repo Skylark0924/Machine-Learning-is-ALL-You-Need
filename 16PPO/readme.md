@@ -349,6 +349,10 @@ $$\eta(\hat{\pi})=\eta(\pi)+\sum_{s} \rho_{\hat{\pi}}(s) \sum_{a} \hat{\pi}(a | 
 
 > Q: 为什么觉得TRPO的叙述方式反了？私以为应该是在约束新旧策略的散度的前提下，找到使替代回报函数$L_\pi(\hat{\pi})$ 最大的 $\theta$ -> 转化为约束优化问题，这样就自然多了嘛。所以那一步惩罚因子的作用很让人迷惑，**烦请大佬们在评论区解惑**。
 
+### Pseudocode
+
+![](../img/Reinforcement%20Learning%20Notes.assets/微信截图_20200430213337.png)
+
 ### Implement
 ```
 class Policy_Network(nn.Module):
@@ -703,6 +707,10 @@ The final Clipped Surrogate(代理) Objective Loss:
 
 ![image-20191205190844049](../img/Reinforcement%20Learning%20Notes.assets/image-20191205190844049.png)
 
+### Pseudocode
+
+![](../img/Reinforcement%20Learning%20Notes.assets/微信截图_20200430213257.png)
+
 ### Implement
 ```
 # PPO1 + PPO2 连续动作空间
@@ -935,7 +943,9 @@ It can be used in both discrete and continuous control.
 
 **Disadvantage**
 
-on-policy -> data inefficient
+on-policy -> data inefficient (there is a off-policy version)
+
+
 
 
 
