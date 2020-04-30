@@ -7,7 +7,7 @@ import random
 from collections import namedtuple
 import gym
 import numpy as np
-import scipy
+from scipy import optimize
 import sys
 sys.path.append("/home/skylark/Github/Machine-Learning-Basic-Codes")
 
@@ -74,7 +74,7 @@ class Memory(object):
 class Skylark_TRPO():
     def __init__(self, env, alpha = 0.1, gamma = 0.6, 
                     tau = 0.97, max_kl = 1e-2, l2reg = 1e-3, damping = 1e-1):
-        self.obs_space = env.observation_space.n
+        self.obs_space = 80*80
         self.act_space = env.action_space.n
         self.policy = Policy_Network(self.obs_space, self.act_space)
         self.value = Value_Network(self.obs_space)
@@ -218,7 +218,7 @@ class Skylark_TRPO():
             value_loss.backward()
             return (value_loss.data.double().numpy(), get_flat_grad_from(self.value).data.double().numpy())
 
-        flat_params, _, opt_info = scipy.optimize.fmin_l_bfgs_b(get_value_loss, get_flat_params_from(self.value).double().numpy(), maxiter=25)
+        flat_params, _, opt_info = optimize.fmin_l_bfgs_b(get_value_loss, get_flat_params_from(self.value).double().numpy(), maxiter=25)
         set_flat_params_to(self.value, torch.Tensor(flat_params))
 
         advantages = (advantages - advantages.mean()) / advantages.std()
@@ -259,11 +259,13 @@ class Skylark_TRPO():
             while not done and steps < num_steps:
                 state = preprocess(state)
                 action = self.choose_action(state)
+                action = action.data[0].numpy()
+                action_ = np.argmax(action)
                 # Interaction with Env
-                next_state, reward, done, info = self.env.step(action) 
-                next_state = preprocess(next_state)
+                next_state, reward, done, info = self.env.step(action_) 
+                next_state_ = preprocess(next_state)
                 mask = 0 if done else 1
-                self.replay_buffer.push(state, np.array[action], mask, reward, next_state)
+                self.replay_buffer.push(state, np.array([action]), mask, reward, next_state_)
                 if len(self.replay_buffer) > self.buffer_size:
                     self.learn(batch_size)
 
@@ -274,24 +276,31 @@ class Skylark_TRPO():
             print('Episode: {} | Avg_reward: {} | Length: {}'.format(i, sum_rew/steps, steps))
         print("Training finished.")
 
-def preprocess(s):
-    return s
-
+def preprocess(I):
+    '''
+    根据具体gym环境的state输出格式，具体分析
+    '''
+    I = I[35:195]
+    I = I[::2, ::2, 0]
+    I[I == 144] = 0
+    I[I == 109] = 0
+    I[I != 0] = 1
+    return I.astype(np.float).ravel()
 
 if __name__ == "__main__":
-    use_ray = False
+    use_ray = True
 
     num_episodes = 1000
-    env = gym.make("Taxi-v3").env
+    env = gym.make("Pong-v0").env
     # env.render()
 
     if use_ray:
         import ray
         from ray import tune
         tune.run(
-            'TRPO',
+            'PPO', # ray 框架不包含 PPO
             config={
-                'env': "Taxi-v3",
+                'env': "Pong-v0",
                 'num_workers': 1,
                 # 'env_config': {}
             }
