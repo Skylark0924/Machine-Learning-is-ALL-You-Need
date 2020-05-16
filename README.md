@@ -49,22 +49,22 @@
 14. [Boosting](./14Boost/)
 
 ### Reinforcement Learning
-15. Deep Q Network
+1.  [Deep Q Network](./RL_DQN/): Q-learning(Tabular), DQN
 
-16. Policy Proximate Optimization
+2.  [Policy Proximate Optimization](./RL_PPO/): Vanilla Policy Gradient, TRPO, PPO
 
-17. Deep Deterministic Policy Gradient
+3.  [Actor Critic](./RL_Actor_Critic/): AC, A2C, A3C
 
-18. Actor Critic
+4.  [Deep Deterministic Policy Gradient](./RL_DDPG): DDPG, TD3
 
-19. Soft Actor Critic
+5.  [Soft Actor Critic](./RL_SAC/)
 
 ### Computer Vision
-20. GAN 
+1. GAN 
 
-21. Resnet
+2. Resnet
 
 ### Natural Language Processing
-22. Transformer
+1. Transformer
 
-23. BERT
+2. BERT
