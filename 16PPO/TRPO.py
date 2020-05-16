@@ -306,7 +306,7 @@ if __name__ == "__main__":
         import ray
         from ray import tune
         tune.run(
-            'PPO', # ray 框架不包含 PPO
+            'PPO', # ray 框架不包含 TRPO
             config={
                 'env': "Pong-v0",
                 'num_workers': 1,
