@@ -14,7 +14,7 @@ class Skylark_Qlearning():
         for i in range(1, num_episodes):
             state = self.env.reset()
 
-            epochs, penalties, reward, = 0, 0, 0
+            epochs, penalties, reward, sum_rew = 0, 0, 0, 0
             done = False
             
             while not done:
