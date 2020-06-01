@@ -46,7 +46,7 @@ class Policy(nn.Module):
         # 2. the value from state s_t 
         return action_prob, state_values
 
-class Skylark_Actor_Critic():
+class Skylark_A2C():
     def __init__(self, env):
         self.model = Policy()
         self.env = env
@@ -177,5 +177,5 @@ if __name__ == "__main__":
             }
         )
     else:
-        ac_agent = Skylark_Actor_Critic(env)
+        ac_agent = Skylark_A2C(env)
         ac_agent.train(num_episodes)

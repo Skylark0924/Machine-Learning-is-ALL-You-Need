@@ -1,7 +1,8 @@
-### Actor-Critic
+# Actor-Critic
 > Actor-Critic structure Sequential Decision
 
-#### Theory
+## Vanilla Actor-Critic
+### Principle
 
 - a Critic that measures how good the action taken is (value-based)
 - an Actor that controls how our agent behaves (policy-based)
@@ -11,6 +12,7 @@ Instead of waiting until the end of episode as we do in Monte Carlo REINFORCE, w
 ![image-20191205104741531](../img/image-20191205104741531.png)
 
 结合了 Policy Gradient (Actor) 和 Function Approximation (Critic) 的方法. `Actor` 基于概率选行为, `Critic` 基于 `Actor` 的行为评判行为的得分, `Actor` 根据 `Critic` 的评分修改选行为的概率，输入的单次奖赏变成了critic输出的总奖赏增量td-error。critic建立s-Q的网络，然后根据[s, r, s_]来训练，并返回td-error。
+![](../img/image-20191205105318993.png)
  
 ![](./../img/ac.jpg)
 
@@ -18,8 +20,38 @@ Instead of waiting until the end of episode as we do in Monte Carlo REINFORCE, w
 
 **劣势**：取决于 Critic 的价值判断, 但是 Critic 难收敛, 再加上 Actor 的更新, 就更难收敛. 为了解决收敛问题, Google Deepmind 提出了 `Actor Critic` 升级版 `Deep Deterministic Policy Gradient`. 后者融合了 DQN 的优势, 解决了收敛难的问题. 
 
+## Advantage Actor-Critic (A2C)
+### Principle
+与Actor-Critic唯一不同的是，使用了优势函数
+![](../img/image-20191205110708645.png)
+以解决 value-based methods 存在的 **high variability** 问题。
+
+优势函数告诉我们**与该状态下采取的任意行动得到的平均value相比，所取得的提升。**
+
+- $A(s, a)>0$：our gradient is pushed in that direction.
+- $A(s, a)<0$：(our action does worse than the average value of that state) our gradient is pushed in the opposite direction.
+
+然而这样做却需要做两个value网络，不划算。实际上可以将上式转换为一个 state value function $V(s)$ 的计算：
+
+![](../img/image-20191205111303995.png)
+
+代码中即为：
+```
+for r in self.model.rewards[::-1]:
+    # calculate the discounted value
+    R = r + self.gamma * R
+    returns.insert(0, R)
+
+returns = torch.tensor(returns)
+returns = (returns - returns.mean()) / (returns.std() + self.eps)
+
+for (log_prob, value), R in zip(saved_actions, returns):
+    advantage = R - value.item()
+```
+
 ## Implement
 ```
+'''A2C Implement'''
 class Policy(nn.Module):
     """
     implements both actor and critic in one model
@@ -56,7 +88,7 @@ class Policy(nn.Module):
         # 2. the value from state s_t 
         return action_prob, state_values
 
-class Skylark_Actor_Critic():
+class Skylark_A2C():
     def __init__(self, env):
         self.model = Policy()
         self.env = env
