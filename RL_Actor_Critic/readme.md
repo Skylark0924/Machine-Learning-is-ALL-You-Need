@@ -1,5 +1,5 @@
-### Actor Critic
-> 
+### Actor-Critic
+> Actor-Critic structure Sequential Decision
 
 #### Theory
 
@@ -8,13 +8,11 @@
 
 Instead of waiting until the end of episode as we do in Monte Carlo REINFORCE, we make an update at each step(**TD Learning**)
 
-![image-20191205104741531](D:\Github\Mad-Learning\RL\Reinforcement Learning Notes.assets\image-20191205104741531.png)
-
-
+![image-20191205104741531](../img/image-20191205104741531.png)
 
 结合了 Policy Gradient (Actor) 和 Function Approximation (Critic) 的方法. `Actor` 基于概率选行为, `Critic` 基于 `Actor` 的行为评判行为的得分, `Actor` 根据 `Critic` 的评分修改选行为的概率，输入的单次奖赏变成了critic输出的总奖赏增量td-error。critic建立s-Q的网络，然后根据[s, r, s_]来训练，并返回td-error。
-
-![image-20191205105318993](D:\Github\Mad-Learning\RL\Reinforcement Learning Notes.assets\image-20191205105318993.png)
+ 
+![](./../img/ac.jpg)
 
 **优势**：可以进行单步更新, 比传统的 Policy Gradient 要快.
 
