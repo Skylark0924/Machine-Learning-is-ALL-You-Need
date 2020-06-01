@@ -1,5 +1,6 @@
 # Actor-Critic
-> Actor-Critic structure Sequential Decision
+> - on-policy
+> - Actor-Critic structure Sequential Decision
 
 ## Vanilla Actor-Critic
 ### Principle
