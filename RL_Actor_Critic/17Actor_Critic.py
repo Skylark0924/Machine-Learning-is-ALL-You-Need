@@ -47,12 +47,16 @@ class Policy(nn.Module):
         return action_prob, state_values
 
 class Skylark_Actor_Critic():
-    def __init__(self):
-        ...
+    def __init__(self, env):
+        self.model = Policy()
+        self.env = env
+        self.optimizer = optim.Adam(self.model.parameters(), lr = 3e-2)
+        self.eps = np.finfo(np.float32).eps.item()
+        self.SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
     
     def select_action(self, state):
         state = torch.from_numpy(state).float()
-        probs, state_value = model(state)
+        probs, state_value = self.model(state)
 
         # create a categorical distribution over the list of probabilities of actions
         m = Categorical(probs)
@@ -61,7 +65,7 @@ class Skylark_Actor_Critic():
         action = m.sample()
 
         # save to action buffer
-        model.saved_actions.append(SavedAction(m.log_prob(action), state_value))
+        self.model.saved_actions.append(self.SavedAction(m.log_prob(action), state_value))
 
         # the action to take (left or right)
         return action.item()
@@ -71,15 +75,15 @@ class Skylark_Actor_Critic():
         Training code. Calculates actor and critic loss and performs backprop.
         """
         R = 0
-        saved_actions = model.saved_actions
+        saved_actions = self.model.saved_actions
         policy_losses = [] # list to save actor (policy) loss
         value_losses = [] # list to save critic (value) loss
         returns = [] # list to save the true values
 
         # calculate the true value using rewards returned from the environment
-        for r in model.rewards[::-1]:
+        for r in self.model.rewards[::-1]:
             # calculate the discounted value
-            R = r + args.gamma * R
+            R = r + self.gamma * R
             returns.insert(0, R)
 
         returns = torch.tensor(returns)
@@ -95,27 +99,27 @@ class Skylark_Actor_Critic():
             value_losses.append(F.smooth_l1_loss(value, torch.tensor([R])))
 
         # reset gradients
-        optimizer.zero_grad()
+        self.optimizer.zero_grad()
 
         # sum up all the values of policy_losses and value_losses
         loss = torch.stack(policy_losses).sum() + torch.stack(value_losses).sum()
 
         # perform backprop
         loss.backward()
-        optimizer.step()
+        self.optimizer.step()
 
         # reset rewards and action buffer
-        del model.rewards[:]
-        del model.saved_actions[:]
+        del self.model.rewards[:]
+        del self.model.saved_actions[:]
     
-    def fit(self):
+    def train(self, num_episodes):
         running_reward = 10
 
         # run inifinitely many episodes
-        for i_episode in count(1):
+        for i in range(1, num_episodes):
 
             # reset environment and episode reward
-            state = env.reset()
+            state = self.env.reset()
             ep_reward = 0
 
             # for each episode, only run 9999 steps so that we don't 
@@ -123,15 +127,15 @@ class Skylark_Actor_Critic():
             for t in range(1, 10000):
 
                 # select action from policy
-                action = select_action(state)
+                action = self.select_action(state)
 
                 # take the action
-                state, reward, done, _ = env.step(action)
+                state, reward, done, _ = self.env.step(action)
 
                 if args.render:
-                    env.render()
+                    self.env.render()
 
-                model.rewards.append(reward)
+                self.model.rewards.append(reward)
                 ep_reward += reward
                 if done:
                     break
@@ -143,12 +147,12 @@ class Skylark_Actor_Critic():
             self.finish_episode()
 
             # log results
-            if i_episode % args.log_interval == 0:
+            if i % args.log_interval == 0:
                 print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
-                    i_episode, ep_reward, running_reward))
+                    i, ep_reward, running_reward))
 
             # check if we have "solved" the cart pole problem
-            if running_reward > env.spec.reward_threshold:
+            if running_reward > self.env.spec.reward_threshold:
                 print("Solved! Running reward is now {} and "
                     "the last episode runs to {} time steps!".format(running_reward, t))
                 break
@@ -157,8 +161,7 @@ if __name__ == "__main__":
     use_ray = True
 
     num_episodes = 1000
-    env = gym.make("Pong-v0").env
-    # env.render()
+    env = gym.make("Pendulum-v0").env
 
     if use_ray:
         import ray
@@ -171,3 +174,6 @@ if __name__ == "__main__":
                 # 'env_config': {}
             }
         )
+    else:
+        ac_agent = Skylark_Actor_Critic(env)
+        ac_agent.train(num_episodes)
