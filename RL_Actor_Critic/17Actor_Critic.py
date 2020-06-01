@@ -53,6 +53,9 @@ class Skylark_Actor_Critic():
         self.optimizer = optim.Adam(self.model.parameters(), lr = 3e-2)
         self.eps = np.finfo(np.float32).eps.item()
         self.SavedAction = namedtuple('SavedAction', ['log_prob', 'value'])
+        self.render = False
+        self.log_interval = 1
+        self.gamma = 0.99
     
     def select_action(self, state):
         state = torch.from_numpy(state).float()
@@ -87,7 +90,7 @@ class Skylark_Actor_Critic():
             returns.insert(0, R)
 
         returns = torch.tensor(returns)
-        returns = (returns - returns.mean()) / (returns.std() + eps)
+        returns = (returns - returns.mean()) / (returns.std() + self.eps)
 
         for (log_prob, value), R in zip(saved_actions, returns):
             advantage = R - value.item()
@@ -125,14 +128,13 @@ class Skylark_Actor_Critic():
             # for each episode, only run 9999 steps so that we don't 
             # infinite loop while learning
             for t in range(1, 10000):
-
                 # select action from policy
                 action = self.select_action(state)
 
                 # take the action
                 state, reward, done, _ = self.env.step(action)
 
-                if args.render:
+                if self.render:
                     self.env.render()
 
                 self.model.rewards.append(reward)
@@ -147,7 +149,7 @@ class Skylark_Actor_Critic():
             self.finish_episode()
 
             # log results
-            if i % args.log_interval == 0:
+            if i % self.log_interval == 0:
                 print('Episode {}\tLast reward: {:.2f}\tAverage reward: {:.2f}'.format(
                     i, ep_reward, running_reward))
 
@@ -158,18 +160,18 @@ class Skylark_Actor_Critic():
                 break
 
 if __name__ == "__main__":
-    use_ray = True
+    use_ray = False
 
     num_episodes = 1000
-    env = gym.make("Pendulum-v0").env
+    env = gym.make("CartPole-v0").env
 
     if use_ray:
         import ray
         from ray import tune
         tune.run(
-            'AC', 
+            'A2C', 
             config={
-                'env': "Pong-v0",
+                'env': "CartPole-v0",
                 'num_workers': 1,
                 # 'env_config': {}
             }
