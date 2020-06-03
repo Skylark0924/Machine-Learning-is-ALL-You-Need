@@ -24,7 +24,7 @@ off-policy -> sample efficient
 If the Q-function approximator develops an incorrect sharp peak for some actions, the policy will quickly exploit that peak and then have brittle or incorrect behavior. 
 
 ### Implement
-```
+```python
 class Actor(nn.Module):
     def __init__(self, input_size, hidden_size, output_size):
         super(Actor, self).__init__()
@@ -192,7 +192,7 @@ L\left(\phi_{2}, \mathcal{D}\right)=\underset{\left(s, a, r, s^{\prime}, d\right
 ![](https://spinningup.openai.com/en/latest/_images/math/b7dfe8fa3a703b9657dcecb624c4457926e0ce8a.svg)
 
 ### Implement
-```
+```python
 class Skylark_TD3():
     def __init__(
             self,
