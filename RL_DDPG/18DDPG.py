@@ -50,6 +50,7 @@ class Skylark_DDPG():
         self.capacity = 10000
         self.batch_size = 32
 
+        # Varies by environment
         s_dim = self.env.observation_space.shape[0]
         a_dim = self.env.action_space.shape[0]
 
@@ -64,11 +65,10 @@ class Skylark_DDPG():
         self.actor_target.load_state_dict(self.actor.state_dict())
         self.critic_target.load_state_dict(self.critic.state_dict())
         
-    def act(self, s0):
-        s0 = torch.tensor(s0, dtype=torch.float).unsqueeze(0)
-        a0 = self.actor(s0).squeeze(0).detach().numpy()
-
-        return a0
+    def select_action(self, state):
+        state = torch.tensor(state, dtype=torch.float).unsqueeze(0)
+        action = self.actor(state).squeeze(0).detach().numpy()
+        return action
     
     def put(self, *transition): 
         if len(self.buffer)== self.capacity:
@@ -122,7 +122,7 @@ class Skylark_DDPG():
             
             for t in range(1, 1000):
                 # self.env.render()
-                a0 = self.act(s0)
+                a0 = self.select_action(s0)
                 s1, r1, done, _ = self.env.step(a0)
                 self.put(s0, a0, r1, s1)
 
@@ -151,5 +151,5 @@ if __name__ == "__main__":
             }
         )
     else:
-        ac_agent = Skylark_DDPG(env)
-        ac_agent.train(num_episodes)
+        ddpg_agent = Skylark_DDPG(env)
+        ddpg_agent.train(num_episodes)
