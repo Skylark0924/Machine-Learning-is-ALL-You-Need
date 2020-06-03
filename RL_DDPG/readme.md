@@ -1,9 +1,9 @@
 # Deep Deterministic Policy Gradient (DDPG)
-> - off-policy
-> - Actor-Critic structure Sequential Decision
-
 
 ## DDPG
+> - off-policy
+> - continuous action spaces.
+> - Actor-Critic structure Sequential Decision
 ### Principle
 **DDPG 简单来说就是 DQN + Actor-Critic**
 
@@ -150,5 +150,49 @@ class Skylark_DDPG():
             print('Episode {} : {}'.format(i, episode_reward))
 ```
 
+## TD3 (Twin Delayed DDPG)
+> - off-policy
+> - only continuous action spaces
+> - Actor-Critic structure Sequential Decision
+
+### Principle 
+尽管DDPG有时可以实现出色的性能，但它在超参数和其他类型的调整方面通常很脆弱。 
+DDPG的常见问题在于，学习到的Q函数对Q值的过估计。然后导致策略中断，因为它利用了Q函数中的错误。
+双延迟DDPG（TD3）是一种通过引入三个关键tricks来解决此问题的算法：
+
+- Clipped Double-Q Learning：跟Double DQN 解决Q值过估计的做法一样，学习两个Q-functions而不是一个（这也是名字里"twin"的由来），并使用两个Q值中较小的一个来做Bellman损失函数中的target；
+- “Delayed” Policy Updates：TD3的策略以及target networks的更新频率低于Q-functions，由于一次策略更新会改变target，延缓更新有助于缓解DDPG中通常出现的波动性。**建议每两个Q-func更新进行一次策略更新**；
+- Target Policy Smoothing：TD3会给target action增加噪声，从而通过沿动作变化平滑Q来使策略更难利用Q-func的error。
+
+**target policy smoothing**:
+
+构成Q-learning target的action是基于target policy $\mu_{\theta_{targ}}$ 的，TD3在action的每个维度上都添加了clipped noise，从而使target action将被限定在有效动作范围内(all valid actions, $a$, satisfy $a_{Low} \leq a \leq a_{High}$)。因此，target actions写作：
+
+$$a^{\prime}\left(s^{\prime}\right)=\operatorname{clip}\left(\mu_{\theta_{\mathrm{targ}}}\left(s^{\prime}\right)+\operatorname{clip}(\epsilon,-c, c), a_{L o w}, a_{H i g h}\right), \quad \epsilon \sim \mathcal{N}(0, \sigma)$$
+
+target policy smoothing实质上是算法的**正则化器**。
+它解决了DDPG中可能发生的特定故障：如果Q函数逼近器为某些操作产生了不正确的尖峰，该策略将迅速利用该峰，并出现脆性或错误行为。
+可以通过在类似action上使Q函数变得平滑来修正，即target policy smoothing。
+
+**clipped double-Q learning**:
+两个Q函数都使用一个目标，使用两个Q函数中的任何一个计算得出的目标值都较小：
+
+$$y\left(r, s^{\prime}, d\right)=r+\gamma(1-d) \min _{i=1,2} Q_{\phi_{i, \text { targ }}}\left(s^{\prime}, a^{\prime}\left(s^{\prime}\right)\right)$$
+
+然后通过回归此目标来学习两者：
+
+$$\begin{array}{l}
+L\left(\phi_{1}, \mathcal{D}\right)=\underset{\left(s, a, r, s^{\prime}, d\right) \sim \mathcal{D}}{\mathrm{E}}\left[\left(Q_{\phi_{1}}(s, a)-y\left(r, s^{\prime}, d\right)\right)^{2}\right] \\
+L\left(\phi_{2}, \mathcal{D}\right)=\underset{\left(s, a, r, s^{\prime}, d\right) \sim \mathcal{D}}{\mathrm{E}}\left[\left(Q_{\phi_{2}}(s, a)-y\left(r, s^{\prime}, d\right)\right)^{2}\right]
+\end{array}$$
+
+使用较小的Q值作为目标值，然后逐步回归该值，有助于避免Q函数的过高估计。
+
+
+
+### Pseudocode
+![](https://spinningup.openai.com/en/latest/_images/math/b7dfe8fa3a703b9657dcecb624c4457926e0ce8a.svg)
+
 ## Reference
 1. [强化学习-基于pytorch的DDPG实现](https://zhuanlan.zhihu.com/p/65931777)
+2. [TD3 Spinning Up](https://spinningup.openai.com/en/latest/algorithms/td3.html#id1)

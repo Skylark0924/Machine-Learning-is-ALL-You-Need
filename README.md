@@ -49,15 +49,15 @@
 14. [Boosting](./14Boost/)
 
 ### Reinforcement Learning
-1.  [Deep Q Network](./RL_DQN/): Q-learning(Tabular), DQN
+1.  [**Value Based Methods**](./RL_DQN/): [Q-learning(Tabular)](./RL_DQN/Q_learning.py), [DQN](./RL_DQN/15DQN.py)
 
-2.  [Policy Proximate Optimization](./RL_PPO/): Vanilla Policy Gradient, TRPO, PPO
+2.  [**Policy Based Methods**](./RL_PPO/): [Vanilla Policy Gradient](./RL_PPO/vanilla_PG.py), [TRPO](./RL_PPO/TRPO.py), [PPO](./RL_PPO/16PPO.py)
 
-3.  [Actor Critic](./RL_Actor_Critic/): AC, A2C, A3C
+3.  [**Actor-Critic Structure**](./RL_Actor_Critic/): AC, [A2C](./RL_Actor_Critic/17Actor_Critic.py), A3C
 
-4.  [Deep Deterministic Policy Gradient](./RL_DDPG): DDPG, TD3
+4.  [**Deep Deterministic Policy Gradient**](./RL_DDPG): [DDPG](./RL_DDPG/18DDPG.py), [DDPG C++ (Undone)](./RL_DDPG/DDPG_LibTorch-master/), TD3
 
-5.  [Soft Actor Critic](./RL_SAC/)
+5.  [**Soft Actor-Critic**](./RL_SAC/)
 
 ### Computer Vision
 1. GAN 

@@ -1,0 +1,55 @@
+Determining if the pthread_create exist failed with the following output:
+Change Dir: /home/skylark/Github/Machine-Learning-Basic-Codes/RL_DDPG/DDPG_LibTorch-master/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_cf1a9/fast"
+/usr/bin/make -f CMakeFiles/cmTC_cf1a9.dir/build.make CMakeFiles/cmTC_cf1a9.dir/build
+make[1]: Entering directory '/home/skylark/Github/Machine-Learning-Basic-Codes/RL_DDPG/DDPG_LibTorch-master/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_cf1a9.dir/CheckSymbolExists.c.o
+/usr/bin/cc     -o CMakeFiles/cmTC_cf1a9.dir/CheckSymbolExists.c.o   -c /home/skylark/Github/Machine-Learning-Basic-Codes/RL_DDPG/DDPG_LibTorch-master/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c
+Linking C executable cmTC_cf1a9
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_cf1a9.dir/link.txt --verbose=1
+/usr/bin/cc       CMakeFiles/cmTC_cf1a9.dir/CheckSymbolExists.c.o  -o cmTC_cf1a9 
+CMakeFiles/cmTC_cf1a9.dir/CheckSymbolExists.c.o: In function `main':
+CheckSymbolExists.c:(.text+0x16): undefined reference to `pthread_create'
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_cf1a9.dir/build.make:97: recipe for target 'cmTC_cf1a9' failed
+make[1]: *** [cmTC_cf1a9] Error 1
+make[1]: Leaving directory '/home/skylark/Github/Machine-Learning-Basic-Codes/RL_DDPG/DDPG_LibTorch-master/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_cf1a9/fast' failed
+make: *** [cmTC_cf1a9/fast] Error 2
+
+File /home/skylark/Github/Machine-Learning-Basic-Codes/RL_DDPG/DDPG_LibTorch-master/build/CMakeFiles/CMakeTmp/CheckSymbolExists.c:
+/* */
+#include <pthread.h>
+
+int main(int argc, char** argv)
+{
+  (void)argv;
+#ifndef pthread_create
+  return ((int*)(&pthread_create))[argc];
+#else
+  (void)argc;
+  return 0;
+#endif
+}
+
+Determining if the function pthread_create exists in the pthreads failed with the following output:
+Change Dir: /home/skylark/Github/Machine-Learning-Basic-Codes/RL_DDPG/DDPG_LibTorch-master/build/CMakeFiles/CMakeTmp
+
+Run Build Command:"/usr/bin/make" "cmTC_06cde/fast"
+/usr/bin/make -f CMakeFiles/cmTC_06cde.dir/build.make CMakeFiles/cmTC_06cde.dir/build
+make[1]: Entering directory '/home/skylark/Github/Machine-Learning-Basic-Codes/RL_DDPG/DDPG_LibTorch-master/build/CMakeFiles/CMakeTmp'
+Building C object CMakeFiles/cmTC_06cde.dir/CheckFunctionExists.c.o
+/usr/bin/cc    -DCHECK_FUNCTION_EXISTS=pthread_create   -o CMakeFiles/cmTC_06cde.dir/CheckFunctionExists.c.o   -c /usr/share/cmake-3.5/Modules/CheckFunctionExists.c
+Linking C executable cmTC_06cde
+/usr/bin/cmake -E cmake_link_script CMakeFiles/cmTC_06cde.dir/link.txt --verbose=1
+/usr/bin/cc   -DCHECK_FUNCTION_EXISTS=pthread_create    CMakeFiles/cmTC_06cde.dir/CheckFunctionExists.c.o  -o cmTC_06cde -lpthreads 
+/usr/bin/ld: cannot find -lpthreads
+collect2: error: ld returned 1 exit status
+CMakeFiles/cmTC_06cde.dir/build.make:97: recipe for target 'cmTC_06cde' failed
+make[1]: *** [cmTC_06cde] Error 1
+make[1]: Leaving directory '/home/skylark/Github/Machine-Learning-Basic-Codes/RL_DDPG/DDPG_LibTorch-master/build/CMakeFiles/CMakeTmp'
+Makefile:126: recipe for target 'cmTC_06cde/fast' failed
+make: *** [cmTC_06cde/fast] Error 2
+
+
