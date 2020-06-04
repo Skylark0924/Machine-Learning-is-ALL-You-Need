@@ -55,7 +55,7 @@
 
 3.  [**Actor-Critic Structure**](./RL_Actor_Critic/): AC, [A2C](./RL_Actor_Critic/17Actor_Critic.py), A3C
 
-4.  [**Deep Deterministic Policy Gradient**](./RL_DDPG): [DDPG](./RL_DDPG/18DDPG.py), [DDPG C++ (Undone)](./RL_DDPG/DDPG_LibTorch-master/), TD3
+4.  [**Deep Deterministic Policy Gradient**](./RL_DDPG): [DDPG](./RL_DDPG/18DDPG.py), [DDPG C++ (Undone)](./RL_DDPG/DDPG_LibTorch-master/), [TD3](./RL_DDPG/TD3.py)
 
 5.  [**Soft Actor-Critic**](./RL_SAC/)
 
