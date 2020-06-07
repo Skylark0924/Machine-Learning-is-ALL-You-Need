@@ -14,11 +14,13 @@
 
 - Applications Part: **RL + NLP + CV**
 
-## 关联知乎专栏：
+## 关联知乎专栏
 
 [RL in Robotics](https://zhuanlan.zhihu.com/c_1188392852261134336)
 
 [Machine Learning 格物志](https://zhuanlan.zhihu.com/c_1236984830903996416)
+
+## 代码目录
 
 ### Regression
 1. [Single Linear Regression](./01Single_Linear_Regression/1Single_Linear_Regression.py)
