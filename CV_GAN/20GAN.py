@@ -152,10 +152,10 @@ class Skylark_GAN():
 
                 batches_done = epoch * len(self.dataloader) + i
                 if batches_done % opt.sample_interval == 0:
-                    save_image(gen_imgs.data[:25], "images/%d.png" % batches_done, nrow=5, normalize=True)
+                    save_image(gen_imgs.data[:25], "img/mnist_results/%d.png" % batches_done, nrow=5, normalize=True)
 
 if __name__=='__main__':
-    os.makedirs("images", exist_ok=True)
+    os.makedirs("img/mnist_results", exist_ok=True)
 
     parser = argparse.ArgumentParser()
     parser.add_argument("--n_epochs", type=int, default=200, help="number of epochs of training")
