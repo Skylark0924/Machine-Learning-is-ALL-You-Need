@@ -68,9 +68,9 @@
 5.  [**Soft Actor-Critic**](./RL_SAC/)
 
 ### Computer Vision
-1. GAN 
+1. [ **GAN** ](./CV_GAN/)
 
-2. Resnet
+2. [**Resnet**](./CV_Resnet/): [Pytorch version](./CV_Resnet/21Resnet.py), [libtorch C++ version](./CV_Resnet/Resnet_libtorch_C++/py_2_C.py)
 
 ### Natural Language Processing
 1. Transformer
