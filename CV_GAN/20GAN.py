@@ -82,10 +82,10 @@ class Skylark_GAN():
         self.optimizer_D = torch.optim.Adam(self.discriminator.parameters(), lr=opt.lr, betas=(opt.b1, opt.b2))
 
         # Configure data loader
-        os.makedirs("../../data/mnist", exist_ok=True)
+        os.makedirs("dataset/mnist", exist_ok=True)
         self.dataloader = torch.utils.data.DataLoader(
             datasets.MNIST(
-                "../../data/mnist",
+                "dataset/mnist",
                 train=True,
                 download=True,
                 transform=transforms.Compose(
