@@ -1,7 +1,7 @@
 # Resnet 
 > Computer Vision
 
-2015 | [Paper](https://arxiv.org/abs/1512.03385) | [Code]()
+2015 | [Paper](https://arxiv.org/abs/1512.03385) | [Code](../CV_Resnet/21Resnet.py)
 
 ## Principle
 ### Target
