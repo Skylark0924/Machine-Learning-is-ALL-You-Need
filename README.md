@@ -5,7 +5,7 @@
 > 所谓致知在格物者，言欲致吾之知，在即物而穷其理也。盖人心之灵，莫不有知，而天下之物，莫不有理。惟于理有未穷，故其知有不尽也。是以大学始教，必使学者即凡天下之物，莫不因其已知之理而益穷之，以求至乎其极。至于用力之久，而一时豁然贯通焉，则众物之表里精粗无不到，而吾心之全体大用无不明矣。
 
 📐📏
-> **格物 (Ko Wu) which means 'investigate the essence of things' in English is a key method for study and better understanding of the knowledge.** It is proposed by ascient Chinese philosophers about 2000 years ago and has a profound impact on later generations. The spirit of Ko Wu asks us to not only learn how to use knowledge, but also clearly understand the intrinsic thoery. Therefore, it is necessary to re-implement ML algorithms by ourselves to figure out what exactly they did and why they succeed.
+> **格物 (Ko Wu) which means 'investigate the essence of things' in English is a key method for study and better understanding of the knowledge.** It is proposed by ancient Chinese philosophers about 2000 years ago and has a profound impact on later generations. The spirit of Ko Wu asks us to not only learn how to use knowledge, but also clearly understand the intrinsic thoery. Therefore, it is necessary to re-implement ML algorithms by ourselves to figure out what exactly they did and why they succeed.
 
 This repository aims to implement popular Machine Learning and Deep Learning algorithms by **both pure python and use open-source frameworks**.
 
