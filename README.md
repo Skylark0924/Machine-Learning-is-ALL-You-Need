@@ -15,7 +15,7 @@ This repository aims to implement popular Machine Learning and Deep Learning alg
 
 - Applications Part: **RL + NLP + CV**
 
-## Welcome everyone to help me finish this Ko Wu project by pull requests, give suggestions and issues!!!
+## Welcome everyone to help me finish this Ko Wu project by pulling requests or giving me some suggestions and issues!!!
 
 ## 关联知乎专栏 Associated Zhihu Blog
 
