@@ -61,21 +61,22 @@ This repository aims to implement popular Machine Learning and Deep Learning alg
 
 ### Reinforcement Learning
 1.  [**Value Based Methods**](./RL_DQN/): [Q-learning(Tabular)](./RL_DQN/Q_learning.py), [DQN](./RL_DQN/15DQN.py)
-
 2.  [**Policy Based Methods**](./RL_PPO/): [Vanilla Policy Gradient](./RL_PPO/vanilla_PG.py), [TRPO](./RL_PPO/TRPO.py), [PPO](./RL_PPO/16PPO.py)
-
 3.  [**Actor-Critic Structure**](./RL_Actor_Critic/): AC, [A2C](./RL_Actor_Critic/17Actor_Critic.py), A3C
-
 4.  [**Deep Deterministic Policy Gradient**](./RL_DDPG): [DDPG](./RL_DDPG/18DDPG.py), [DDPG C++ (Undone)](./RL_DDPG/DDPG_LibTorch-master/), [TD3](./RL_DDPG/TD3.py)
-
 5.  [**Soft Actor-Critic**](./RL_SAC/)
 
 ### Computer Vision
 1. [ **GAN** ](./CV_GAN/)
-
 2. [**Resnet**](./CV_Resnet/): [Pytorch version](./CV_Resnet/21Resnet.py), [libtorch C++ version](./CV_Resnet/Resnet_libtorch_C++/py_2_C.py)
 
 ### Natural Language Processing
-1. Transformer
+1. [Attention mechanism](./NLP_Attention/readme.md)
+2. Transformer
+3. BERT
 
-2. BERT
+### Graph Neural Networks 
+1. [Graph Neural Network (GNN)](./Graph_GNN/readme.md)
+2. [Graph Convolutional Neural Network](./Graph_GCN/readme.md)
+3. [GraphSAGE](./Graph_GraphSAGE/readme.md)
+4. [GraphRNN](./Graph_GraphRNN/readme.md)

@@ -1,5 +1,8 @@
 
 *.pyc
 *.hdf5
+*.xml
+*.iml
 dataset/cifar-10-python.tar.gz
 dataset/cifar-10-batches-py/
+.vscode/settings.json

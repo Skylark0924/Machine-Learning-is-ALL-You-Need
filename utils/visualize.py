@@ -2,6 +2,7 @@ from matplotlib.colors import ListedColormap
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.axes._axes import _log as matplotlib_axes_logger
+
 matplotlib_axes_logger.setLevel('ERROR')
 from sklearn.metrics import confusion_matrix
 
@@ -30,11 +31,13 @@ def visualization_clf(X_train, Y_train, classifier, clf_name, set_name):
     plt.legend()
     plt.show()
 
+
 def visualization_reg(X, Y, regressor, reg_name, set_name):
     plt.scatter(X, Y, color='red')
     plt.plot(X, regressor.predict(X), color='blue')
     plt.title('{} ({} set)'.format(reg_name, set_name))
     plt.show()
+
 
 def print_confusion_matrix(Y_test, Y_pred, clf_name):
     cm = confusion_matrix(Y_test, Y_pred)
@@ -53,9 +56,10 @@ def mean_squared_error(y_true, y_pred):
 
 
 # 可视化二维数据
-def plot_data_2d(X,marker):
-    plt.plot(X[:,0],X[:,1],marker) 
+def plot_data_2d(X, marker):
+    plt.plot(X[:, 0], X[:, 1], marker)
     return plt
+
 
 # 显示图片
 def display_imageData(imgData):
@@ -66,24 +70,27 @@ def display_imageData(imgData):
     - 将每行的数据调整成图像的矩阵，放进二维数组
     - 显示即可
     '''
-    m,n = imgData.shape
+    m, n = imgData.shape
     width = np.int32(np.round(np.sqrt(n)))
-    height = np.int32(n/width);
+    height = np.int32(n / width);
     rows_count = np.int32(np.floor(np.sqrt(m)))
-    cols_count = np.int32(np.ceil(m/rows_count))
+    cols_count = np.int32(np.ceil(m / rows_count))
     pad = 1
-    display_array = -np.ones((pad+rows_count*(height+pad),pad+cols_count*(width+pad)))
+    display_array = -np.ones((pad + rows_count * (height + pad), pad + cols_count * (width + pad)))
     for i in range(rows_count):
         for j in range(cols_count):
-            max_val = np.max(np.abs(imgData[sum,:]))
-            display_array[pad+i*(height+pad):pad+i*(height+pad)+height,pad+j*(width+pad):pad+j*(width+pad)+width] = imgData[sum,:].reshape(height,width,order="F")/max_val    # order=F指定以列优先，在matlab中是这样的，python中需要指定，默认以行
+            max_val = np.max(np.abs(imgData[sum, :]))
+            display_array[pad + i * (height + pad):pad + i * (height + pad) + height,
+            pad + j * (width + pad):pad + j * (width + pad) + width] = imgData[sum, :].reshape(height, width,
+                                                                                               order="F") / max_val  # order=F指定以列优先，在matlab中是这样的，python中需要指定，默认以行
             sum += 1
-            
-    plt.imshow(display_array,cmap='gray')   #显示灰度图像
+
+    plt.imshow(display_array, cmap='gray')  # 显示灰度图像
     plt.axis('off')
     plt.show()
 
+
 def kmeans_plot(X, centroids):
-    plt.scatter(X[:,0], X[:,1])     # 原数据的散点图
-    plt.plot(centroids[:,0],centroids[:,1],'r^',markersize=10)  # 聚类中心
+    plt.scatter(X[:, 0], X[:, 1])  # 原数据的散点图
+    plt.plot(centroids[:, 0], centroids[:, 1], 'r^', markersize=10)  # 聚类中心
     plt.show()
