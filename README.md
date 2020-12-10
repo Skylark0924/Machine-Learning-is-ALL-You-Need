@@ -10,10 +10,9 @@
 This repository aims to implement popular Machine Learning and Deep Learning algorithms by **both pure python and use open-source frameworks**.
 
 - Common Machine Learning Part: switch by **`use_sklearn` flag** in the main function；
-
 - Deep Learning Part: **four** implement methods for each algorithm (`use_sklearn`, `use_keras`, `use_torch` and **`self_implement`**)；
-
 - Applications Part: **RL + NLP + CV**
+- New trend: **GNNs**
 
 ## Welcome everyone to help me finish this Ko Wu project by pulling requests or giving me some suggestions and issues!!!
 
