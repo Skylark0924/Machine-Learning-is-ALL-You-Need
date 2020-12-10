@@ -69,6 +69,6 @@ This repository aims to implement popular Machine Learning and Deep Learning alg
 
 ### Graph Neural Networks 
 1. [Graph Neural Network (GNN)](./Graph_GNN/readme.md)
-2. [Graph Convolutional Neural Network](./Graph_GCN/readme.md)
+2. [Graph Convolutional Neural Network (GCN)](./Graph_GCN/readme.md)
 3. [GraphSAGE](./Graph_GraphSAGE/readme.md)
 4. [GraphRNN](./Graph_GraphRNN/readme.md)
