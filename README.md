@@ -27,33 +27,25 @@ This repository aims to implement popular Machine Learning and Deep Learning alg
 
 ### Regression
 1. [Single Linear Regression](./01Single_Linear_Regression/1Single_Linear_Regression.py)
-
 2. [Multiple Linear Regression](./02Multiple_Linear_Regression/2Multiple_Linear_Regression.py)
 
 ### Classification
 3. [Logistic Regression](./03Logistic_Regression/3Logistic_Regression.py)
-
 4. [KNN](./04K_Nearest_Neighbours/)
-
 5. [Support Vector Machine](./05Support_Vector_Machine/)
-
 6. [Naive Bayes](./06Naive_Bayes/)
 
 ### Regression & Classification
 7. [Decision Tree](./07Decision_Trees/)
-
 8. [Random Forest](./08Random_Forest/)
 
 ### Neural Network
 9. [Feedforward Neural Network](./09Neural_Network/)
-
 10. [Convolutional Neural Network](./10CNN/)
-
 11. [LSTM](./11LSTM/)
 
 ### Unsupervised Learning
 12. [PCA](./12PCA/)
-
 13. [K-Means](./13Kmeans/)
 
 ### Ensemble Model
