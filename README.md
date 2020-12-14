@@ -62,12 +62,14 @@ This repository aims to implement popular Machine Learning and Deep Learning alg
 2. [**Resnet**](./CV_Resnet/): [Pytorch version](./CV_Resnet/21Resnet.py), [libtorch C++ version](./CV_Resnet/Resnet_libtorch_C++/py_2_C.py)
 
 ### Natural Language Processing
-1. [Attention mechanism](./NLP_Attention/readme.md)
+1. [Attention mechanism](./NLP_Attention/)
 2. Transformer
 3. BERT
 
 ### Graph Neural Networks 
-1. [Graph Neural Network (GNN)](./Graph_GNN/readme.md)
-2. [Graph Convolutional Neural Network (GCN)](./Graph_GCN/readme.md)
-3. [GraphSAGE](./Graph_GraphSAGE/readme.md)
-4. [GraphRNN](./Graph_GraphRNN/readme.md)
+1. [Graph Neural Network (GNN)](./Graph_GNN/)
+2. Graph Convolutional Neural Network (GCN)
+3. Graph Attention Networks (GAT)
+4. GraphSAGE
+5. GraphRNN
+6. Variational Graph Auto-Encoders (GAE)
