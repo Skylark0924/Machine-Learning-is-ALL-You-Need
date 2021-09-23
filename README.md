@@ -63,7 +63,7 @@ This repository aims to implement popular Machine Learning and Deep Learning alg
 
 ### Natural Language Processing
 1. [Attention mechanism](./NLP_Attention/)
-2. Transformer
+2. [Transformer](./NLP_Transformer/)
 3. BERT
 
 ### Graph Neural Networks 
