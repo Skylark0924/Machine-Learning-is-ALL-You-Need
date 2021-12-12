@@ -1,5 +1,5 @@
-# Attention: Copy from https://github.com/Kenneth111/TransformerDemo, which is a very concise implementation by Pytorch.
-# The original author has the copyright to the code!!!
+# Attention: The code is copied from https://github.com/Kenneth111/TransformerDemo, which is a very concise implementation by Pytorch. 
+# The original author has the copyright to the code!!! Thanks a lot to the original author！
 
 import argparse
 from numpy import arange, random
@@ -8,7 +8,7 @@ import torch.nn as nn
 import torch.optim as optim
 from torch.utils.data import DataLoader, random_split
 from number_loader import NumberLoader
-from model import TransformerModel
+from model import SkylarkTransformer
 from torch import LongTensor
 from torch.utils.data import Dataset
 
@@ -89,7 +89,7 @@ def main(model_name=None, hidden=64, nlayers=1):
     train_set, val_set = random_split(dataset, [train_len, val_len])
     train_loader = DataLoader(train_set, batch_size=batch_size, shuffle=True, num_workers=1)
     val_loader = DataLoader(val_set, batch_size=batch_size, shuffle=True, num_workers=1)
-    model = TransformerModel(voc_size, voc_size, hidden=hidden, nlayers=nlayers)
+    model = SkylarkTransformer(voc_size, voc_size, hidden=hidden, nlayers=nlayers)
     if model_name is not None:
         model.load_state_dict(load(model_name))
     model = model.cuda()
@@ -127,6 +127,6 @@ if __name__ == "__main__":
             model_name = main(hidden=hidden, nlayers=nlayers)
     else:
         model_name = args.test_model
-    model = TransformerModel(10000, 10000, hidden=hidden, nlayers=nlayers)
+    model = SkylarkTransformer(10000, 10000, hidden=hidden, nlayers=nlayers)
     model.load_state_dict(load(model_name))
     test(model, test_times=10)

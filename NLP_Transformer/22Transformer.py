@@ -1,5 +1,5 @@
-# Attention: Copy from https://github.com/Kenneth111/TransformerDemo, which is a very concise implementation by Pytorch.
-# The original author has the copyright to the code!!!
+# Attention: The code is copied from https://github.com/Kenneth111/TransformerDemo, which is a very concise implementation by Pytorch.
+# The original author has the copyright to the code!!! Thanks a lot to the original author！
 
 import torch
 from torch import nn
