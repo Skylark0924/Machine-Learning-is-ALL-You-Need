@@ -61,6 +61,7 @@ This repository aims to implement popular Machine Learning and Deep Learning alg
 1. [ **GAN** ](./CV_GAN/)
 2. [**Resnet**](./CV_Resnet/): [Pytorch version](./CV_Resnet/21Resnet.py), [libtorch C++ version](./CV_Resnet/Resnet_libtorch_C++/py_2_C.py)
 3. [**VGG**](./CV_VGG/)
+4. [**FlowNet**](./CV_FlowNet/)
 
 ### Natural Language Processing
 1. [Attention mechanism](./NLP_Attention/)
