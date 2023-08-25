@@ -75,3 +75,19 @@ This repository aims to implement popular Machine Learning and Deep Learning alg
 4. GraphSAGE
 5. GraphRNN
 6. Variational Graph Auto-Encoders (GAE)
+
+---
+
+If you're interested in reinforcement learning, we encourage you to check out our latest library of reinforcement learning and imitation learning in (humanoid) robotics.
+
+[![](img/image-20230825121432059.png)](https://github.com/Skylark0924/Rofunc)
+
+[![Release](https://img.shields.io/github/v/release/Skylark0924/Rofunc)](https://pypi.org/project/rofunc/)
+![License](https://img.shields.io/github/license/Skylark0924/Rofunc?color=blue)
+![](https://img.shields.io/github/downloads/skylark0924/Rofunc/total)
+[![](https://img.shields.io/github/issues-closed-raw/Skylark0924/Rofunc?color=brightgreen)](https://github.com/Skylark0924/Rofunc/issues?q=is%3Aissue+is%3Aclosed)
+[![](https://img.shields.io/github/issues-raw/Skylark0924/Rofunc?color=orange)](https://github.com/Skylark0924/Rofunc/issues?q=is%3Aopen+is%3Aissue)
+[![Documentation Status](https://readthedocs.org/projects/rofunc/badge/?version=latest)](https://rofunc.readthedocs.io/en/latest/?badge=latest)
+[![Build Status](https://img.shields.io/endpoint.svg?url=https%3A%2F%2Factions-badge.atrox.dev%2FSkylark0924%2FRofunc%2Fbadge%3Fref%3Dmain&style=flat)](https://actions-badge.atrox.dev/Skylark0924/Rofunc/goto?ref=main)
+
+> **Repository address: https://github.com/Skylark0924/Rofunc**
